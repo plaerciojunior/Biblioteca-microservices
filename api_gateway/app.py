@@ -17,7 +17,7 @@ RECOMMENDATION_SERVICE = 'http://localhost:5004'
 def criar_usuario():
 
     response = requests.post(
-        f'{USER_SERVICE}/',
+        f'{USER_SERVICE}/users',
         json=request.json
     )
 
@@ -28,7 +28,7 @@ def criar_usuario():
 def listar_usuarios():
 
     response = requests.get(
-        f'{USER_SERVICE}/'
+        f'{USER_SERVICE}/users'
     )
 
     return jsonify(response.json()), response.status_code
@@ -38,7 +38,7 @@ def listar_usuarios():
 def get_usuario(id):
 
     response = requests.get(
-        f'{USER_SERVICE}/{id}'
+        f'{USER_SERVICE}/users/{id}'
     )
 
     return jsonify(response.json()), response.status_code
@@ -49,7 +49,16 @@ def get_usuario(id):
 def put_usuario(id):
 
     response = requests.put(
-        f'{USER_SERVICE}/{id}',json=request.json)
+        f'{USER_SERVICE}/users/{id}',json=request.json)
+
+    return jsonify(response.json()), response.status_code
+
+#Apagar usuário
+@app.route('/users/<int:id>', methods=['DELETE'])
+def delete_usuario(id):
+
+    response = requests.delete(
+        f'{USER_SERVICE}/users/{id}')
 
     return jsonify(response.json()), response.status_code
 
@@ -140,7 +149,7 @@ def get_emprestimos(id):
 
 #Devolver livro/encerrar empréstimo
 @app.route('/loans/<int:id>', methods=['PUT'])
-def encerrar_empréstimo(id):
+def encerrar_emprestimo(id):
 
     response = requests.put(
         f'{LOAN_SERVICE}/loans/{id}'

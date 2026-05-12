@@ -6,7 +6,7 @@ from werkzeug.security import generate_password_hash
 app = Flask(__name__)
 
 #ROTA PARA CRIAÇÃO DE USUÁRIO
-@app.route('/', methods=['POST'])
+@app.route('/users', methods=['POST'])
 @db_session
 def create_user():
     data = request.json
@@ -26,7 +26,7 @@ def create_user():
                         "id": usuario.id, "email":usuario.email, "tipo": usuario.tipo})
 
 # GET TODOS OS USUÁRIOS
-@app.route('/', methods=['GET'])
+@app.route('/users', methods=['GET'])
 @db_session
 def get_users():
 
@@ -45,7 +45,7 @@ def get_users():
     return jsonify(lista_usuarios)
 
 # GET USUÁRIO POR ID
-@app.route('/<int:id>', methods=['GET'])
+@app.route('/users/<int:id>', methods=['GET'])
 @db_session
 def get_user(id):
 
@@ -64,7 +64,7 @@ def get_user(id):
     })
 
 #ATUALIZAR DADOS DO USUÁRIO
-@app.route('/<int:id>', methods=['PUT'])
+@app.route('/users/<int:id>', methods=['PUT'])
 @db_session
 def update_user(id):
 
@@ -98,8 +98,24 @@ def update_user(id):
         "tipo": usuario.tipo
     })
 
-    
-    
+#Apagar usuário
+@app.route('/users/<int:id>', methods=['DELETE'])
+@db_session
+def delete_user(id):
+    usuario = Usuario.get(id=id)
+
+    if not usuario:
+        return jsonify({
+            "message": "Usuário  não encontrado"
+        })
+
+    usuario.delete()
+    commit()
+
+    return jsonify({
+            "message": "Usuário deletado com sucesso"
+        })
+
     
 if __name__ == "__main__":
     app.run(port=5001)
