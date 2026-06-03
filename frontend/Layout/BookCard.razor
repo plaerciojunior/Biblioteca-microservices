@@ -1,0 +1,32 @@
+<article class="bg-surface-container-lowest border-2 border-on-background neo-shadow flex flex-col group cursor-pointer h-[450px] transition-transform hover:-translate-y-1">
+    
+    <div class="h-[60%] border-b-2 border-on-background overflow-hidden relative">
+        
+        <div class="w-full h-full @(IsAvailable ? "bg-[#e2e8f0]" : "bg-primary-container") flex items-center justify-center p-6 transition-colors">
+             <span class="font-headline-lg text-on-background font-black text-center text-2xl leading-tight">@Title</span>
+        </div>
+        
+        <div class="absolute top-4 right-4 border-2 border-on-background @(IsAvailable ? "bg-surface-bright" : "bg-secondary-container") px-3 py-1 font-label-sm font-bold neo-shadow">
+            @(IsAvailable ? "Disponível" : "Emprestado")
+        </div>
+    </div>
+    
+    <div class="p-6 flex flex-col flex-1 justify-between bg-surface-container-lowest">
+        <div>
+            <h3 class="font-headline-md text-xl font-bold leading-tight mb-2 text-on-background group-hover:text-primary transition-colors">@Title</h3>
+            <p class="font-body-md text-on-surface-variant text-base">@Author</p>
+        </div>
+        
+        <div class="flex justify-between items-end mt-4">
+            <span class="font-label-sm border-2 border-on-background px-3 py-1 bg-surface-variant">@Category</span>
+            <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors text-2xl">arrow_forward</span>
+        </div>
+    </div>
+</article>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Author { get; set; } = "";
+    [Parameter] public string Category { get; set; } = "";
+    [Parameter] public bool IsAvailable { get; set; }
+}

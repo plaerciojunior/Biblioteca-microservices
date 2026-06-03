@@ -1,0 +1,40 @@
+﻿<aside class="hidden lg:flex flex-col h-full w-[260px] border-2 border-on-background bg-surface-container-low py-gutter px-4 shrink-0 neo-shadow sticky top-32" style="height: calc(100vh - 160px);">
+    
+    <div class="mb-8 flex items-center gap-4">
+        <div class="w-12 h-12 border-2 border-on-background bg-secondary-container overflow-hidden shrink-0 flex items-center justify-center">
+            <span class="material-symbols-outlined">person</span>
+        </div>
+        <div>
+            <h2 class="font-headline-sm font-bold text-on-surface leading-tight">Minha Biblioteca</h2>
+            <p class="font-label-sm text-on-surface-variant">Conta de Leitor</p>
+        </div>
+    </div>
+
+    <button class="w-full bg-primary-container border-2 border-on-background py-3 px-4 font-label-md font-bold neo-shadow hover:bg-secondary-container hover:neo-shadow-hover transition-all text-on-surface mb-8 flex justify-center items-center gap-2">
+        <span class="material-symbols-outlined">add</span> Novo Empréstimo
+    </button>
+
+    <nav class="flex flex-col gap-2 flex-1 overflow-y-auto">
+        <NavLink class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 active:scale-95 border-2 border-transparent" href="" Match="NavLinkMatch.All">
+            <span class="material-symbols-outlined">home</span>
+            <span class="font-label-md">Início</span>
+        </NavLink>
+        
+        <NavLink class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 active:scale-95 border-2 border-transparent" href="my-loans">
+            <span class="material-symbols-outlined">menu_book</span>
+            <span class="font-label-md">Meus Empréstimos</span>
+        </NavLink>
+
+        <NavLink class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 active:scale-95 border-2 border-transparent" href="history">
+            <span class="material-symbols-outlined">history</span>
+            <span class="font-label-md">Histórico</span>
+        </NavLink>
+    </nav>
+
+    <div class="mt-auto pt-4 border-t-2 border-on-background flex flex-col gap-2">
+        <a class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant transition-colors duration-200 border-2 border-transparent" href="#">
+            <span class="material-symbols-outlined">logout</span>
+            <span class="font-label-md">Sair</span>
+        </a>
+    </div>
+</aside>

@@ -1,0 +1,166 @@
+@page "/admin/inventory/{BookId:int}"
+@layout AdminLayout
+
+<div class="max-w-container-max mx-auto flex flex-col gap-8 pb-12">
+    
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-surface-container-lowest p-6 border-2 border-on-background neo-shadow mt-4">
+        <div>
+            <nav aria-label="Breadcrumb" class="font-label-sm text-on-surface-variant flex items-center gap-2 mb-2 font-bold uppercase tracking-wider">
+                <a href="/admin/dashboard" class="hover:text-primary transition-colors">Admin</a>
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                <a href="/admin/dashboard" class="hover:text-primary transition-colors">Inventário</a>
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+                <span class="text-on-surface">@Book.Title</span>
+            </nav>
+            <h2 class="font-display-lg text-4xl font-black text-on-surface tracking-tight">@Book.Title</h2>
+        </div>
+        <button class="bg-primary-container text-on-surface font-label-md border-2 border-on-background py-3 px-6 neo-shadow hover:bg-secondary-container transition-all flex items-center gap-2 font-bold uppercase">
+            <span class="material-symbols-outlined">edit</span> Editar Livro
+        </button>
+    </header>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+        <div class="bg-surface-container-lowest p-6 border-2 border-on-background neo-shadow flex flex-col gap-2">
+            <span class="font-label-md text-on-surface-variant uppercase tracking-wider font-bold">Total de Cópias</span>
+            <span class="font-display-lg text-4xl font-black">@Book.TotalCopies</span>
+        </div>
+        <div class="bg-surface-container-lowest p-6 border-2 border-on-background neo-shadow flex flex-col gap-2">
+            <span class="font-label-md text-on-surface-variant uppercase tracking-wider font-bold">Disponíveis</span>
+            <span class="font-display-lg text-4xl font-black text-[#6b5195]">@Book.AvailableCopies</span>
+        </div>
+        <div class="bg-surface-container-lowest p-6 border-2 border-on-background neo-shadow flex flex-col gap-2">
+            <span class="font-label-md text-on-surface-variant uppercase tracking-wider font-bold">Emprestados</span>
+            <span class="font-display-lg text-4xl font-black text-[#864e5a]">@Book.LoanedCopies</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-4 bg-surface-container-lowest border-2 border-on-background neo-shadow p-4 flex items-center justify-center aspect-[2/3] overflow-hidden">
+            <img alt="Capa de @Book.Title" class="w-full h-full object-cover border-2 border-on-background" src="@Book.CoverUrl"/>
+        </div>
+        
+        <div class="lg:col-span-8 bg-surface-container-lowest border-2 border-on-background neo-shadow p-8 flex flex-col gap-6">
+            <h3 class="font-headline-md text-2xl font-bold border-b-2 border-on-background pb-4 mb-2">Informações do Livro</h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-8 gap-x-8">
+                <div class="flex flex-col gap-1">
+                    <span class="font-label-sm text-on-surface-variant uppercase font-bold tracking-wider">Título</span>
+                    <span class="font-body-lg text-xl font-bold text-on-surface">@Book.Title</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="font-label-sm text-on-surface-variant uppercase font-bold tracking-wider">Autor</span>
+                    <span class="font-body-lg text-xl font-bold text-on-surface">@Book.Author</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="font-label-sm text-on-surface-variant uppercase font-bold tracking-wider">ISBN</span>
+                    <span class="font-body-lg text-xl font-bold text-on-surface">@Book.ISBN</span>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <span class="font-label-sm text-on-surface-variant uppercase font-bold tracking-wider">Editora</span>
+                    <span class="font-body-lg text-xl font-bold text-on-surface">@Book.Publisher</span>
+                </div>
+                
+                <div class="flex flex-col gap-2 sm:col-span-2 border-t-2 border-dashed border-outline pt-6 mt-2">
+                    <span class="font-label-sm text-on-surface-variant uppercase font-bold tracking-wider mb-2">Gêneros</span>
+                    <div class="flex flex-wrap gap-3">
+                        @foreach(var genre in Book.Genres)
+                        {
+                            <span class="font-label-md border-2 border-on-background py-1 px-4 font-bold uppercase bg-surface-variant shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">@genre</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-surface-container-lowest border-2 border-on-background neo-shadow overflow-hidden mb-8">
+        <div class="p-6 border-b-2 border-on-background bg-primary-container">
+            <h3 class="font-headline-md text-xl font-bold uppercase tracking-wider">Empréstimos Atuais</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse min-w-[700px]">
+                <thead>
+                    <tr class="border-b-2 border-on-background bg-surface-variant font-label-md uppercase">
+                        <th class="p-4 border-r-2 border-on-background tracking-wider">Usuário</th>
+                        <th class="p-4 border-r-2 border-on-background tracking-wider">Data Empréstimo</th>
+                        <th class="p-4 border-r-2 border-on-background tracking-wider">Data Devolução</th>
+                        <th class="p-4 tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="font-body-md">
+                    @foreach(var loan in Book.ActiveLoans)
+                    {
+                        <tr class="border-b-2 border-on-background last:border-b-0 hover:bg-surface-variant transition-colors">
+                            <td class="p-4 border-r-2 border-on-background font-bold text-lg">@loan.UserName</td>
+                            <td class="p-4 border-r-2 border-on-background">@loan.LoanDate.ToShortDateString()</td>
+                            <td class="p-4 border-r-2 border-on-background @(loan.IsOverdue ? "text-[#93000a] font-bold" : "")">
+                                @loan.DueDate.ToShortDateString()
+                            </td>
+                            <td class="p-4">
+                                @if(loan.IsOverdue)
+                                {
+                                    <span class="inline-flex items-center gap-2 font-label-sm uppercase font-bold text-[#93000a] bg-[#ffdad6] border-2 border-on-background py-1 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                        <span class="material-symbols-outlined text-[16px]">warning</span> Atrasado
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-2 font-label-sm uppercase font-bold text-on-surface bg-[#ccc460] border-2 border-on-background py-1 px-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                        <span class="material-symbols-outlined text-[16px]">schedule</span> Ativo
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int BookId { get; set; }
+
+    // Objeto mockado para demonstrar o binding. 
+    // Em produção, isso virá do seu microsserviço no método OnInitializedAsync.
+    private BookDetailModel Book = new BookDetailModel
+    {
+        Title = "Neuromancer",
+        Author = "William Gibson",
+        ISBN = "978-0441569595",
+        Publisher = "Ace Books",
+        CoverUrl = "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?q=80&w=600&auto=format&fit=crop", // Imagem placeholder vaporwave
+        TotalCopies = 5,
+        AvailableCopies = 3,
+        LoanedCopies = 2,
+        Genres = new List<string> { "Sci-Fi", "Cyberpunk" },
+        ActiveLoans = new List<LoanModel>
+        {
+            new LoanModel { UserName = "Alice Vance", LoanDate = DateTime.Now.AddDays(-10), DueDate = DateTime.Now.AddDays(4), IsOverdue = false },
+            new LoanModel { UserName = "Case Henry", LoanDate = DateTime.Now.AddDays(-20), DueDate = DateTime.Now.AddDays(-6), IsOverdue = true }
+        }
+    };
+
+    public class BookDetailModel
+    {
+        public string Title { get; set; } = "";
+        public string Author { get; set; } = "";
+        public string ISBN { get; set; } = "";
+        public string Publisher { get; set; } = "";
+        public string CoverUrl { get; set; } = "";
+        public int TotalCopies { get; set; }
+        public int AvailableCopies { get; set; }
+        public int LoanedCopies { get; set; }
+        public List<string> Genres { get; set; } = new();
+        public List<LoanModel> ActiveLoans { get; set; } = new();
+    }
+
+    public class LoanModel
+    {
+        public string UserName { get; set; } = "";
+        public DateTime LoanDate { get; set; }
+        public DateTime DueDate { get; set; }
+        public bool IsOverdue { get; set; }
+    }
+}

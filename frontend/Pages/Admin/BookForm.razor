@@ -1,0 +1,96 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
+    
+    <div class="relative w-full max-w-4xl bg-[#FFF8ED] border-2 border-on-background shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-10 mt-auto mb-auto">
+
+        <button @onclick="Fechar" class="absolute top-10 right-10 p-2 bg-white border-2 border-on-background hover:bg-surface-variant transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] z-10 flex items-center justify-center">
+            <span class="material-symbols-outlined font-bold text-xl">close</span>
+        </button>
+
+        <header class="mb-10 border-b-2 border-on-background pb-6 flex items-center justify-between">
+            <div>
+                <h1 class="font-headline-lg text-4xl font-black text-on-background tracking-tight">
+                    @(IsEditMode ? "Editar Detalhes" : "Adicionar Livro")
+                </h1>
+            </div>
+            
+            <div class="mr-16 flex items-center"> <div class="w-14 h-14 border-2 border-on-background bg-[#ccc460] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] shrink-0 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-3xl text-on-background">edit_document</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="space-y-6">
+            <div class="space-y-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Título</label>
+                <input type="text" @bind="Book.Title" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
+            </div>
+            <div class="space-y-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Autor</label>
+                <input type="text" @bind="Book.Author" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-2">
+                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm">ISBN</label>
+                    <input type="text" @bind="Book.ISBN" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
+                </div>
+                <div class="space-y-2">
+                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Status</label>
+                    <select @bind="Book.Status" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all appearance-none">
+                        <option value="Available">Disponível</option>
+                        <option value="Loaned">Emprestado</option>
+                        <option value="Overdue">Atrasado</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-8 mt-10 border-t-2 border-on-background">
+            @if (IsEditMode)
+            {
+                <button class="bg-[#ffdad6] text-[#93000a] border-2 border-on-background px-8 py-4 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+                    <span class="material-symbols-outlined">delete</span> Apagar
+                </button>
+            }
+            else { <div></div> }
+
+            <div class="flex gap-6">
+                <button @onclick="Fechar" class="bg-surface-variant border-2 border-on-background px-8 py-4 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Cancelar</button>
+                <button class="bg-[#d1b3ff] border-2 border-on-background px-10 py-4 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex gap-2 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+                    <span class="material-symbols-outlined">save</span> Salvar
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    [Parameter] public int? BookId { get; set; }
+    
+    // O Parâmetro de Evento que o componente Pai (Inventory) vai escutar
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private bool IsEditMode => BookId.HasValue;
+    private BookFormModel Book = new();
+
+    protected override void OnInitialized()
+    {
+        if (IsEditMode)
+        {
+            Book = new BookFormModel { Title = "Neuromancer", Author = "William Gibson", ISBN = "978-0441569595", Status = "Available" };
+        }
+    }
+
+    private Task Fechar()
+    {
+        return OnClose.InvokeAsync();
+    }
+
+    public class BookFormModel
+    {
+        public string Title { get; set; } = "";
+        public string Author { get; set; } = "";
+        public string ISBN { get; set; } = "";
+        public string Status { get; set; } = "Available";
+    }
+}

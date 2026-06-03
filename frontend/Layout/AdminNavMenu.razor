@@ -1,0 +1,43 @@
+<style>
+    /* Estilo exclusivo para a aba ATIVA */
+    a.active {
+        background-color: #d1b3ff !important; /* Fundo Roxo */
+        color: #1d1b1f !important; /* TEXTO PRETO (remove o azul) */
+        border-color: #1d1b1f !important; /* Borda preta */
+        box-shadow: 4px 4px 0px 0px rgba(0,0,0,1) !important; /* Sombra sólida */
+        font-weight: 900 !important;
+        transform: translate(-2px, -2px); /* Efeito de botão pressionado */
+    }
+</style>
+
+<nav class="hidden md:flex flex-col h-screen w-[260px] border-r-2 border-on-background bg-surface-container-low py-gutter px-6 fixed top-0 left-0 z-40">
+        
+    <div class="mb-10 mt-4 border-b-2 border-on-background pb-6">
+        <h1 class="font-headline-sm text-2xl font-black text-on-surface tracking-tight uppercase leading-tight">Projeto de<br/>Engenharia</h1>
+        <p class="font-label-md text-label-md text-on-surface-variant mt-2 font-bold">Painel Admin</p>
+    </div>
+    
+    <div class="flex-grow flex flex-col gap-4">
+        <NavLink class="flex items-center gap-3 p-4 text-on-surface border-2 border-transparent font-bold transition-all duration-200 hover:bg-[#ecdcff] hover:border-on-background hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:-translate-x-1" href="/admin/dashboard" Match="NavLinkMatch.All">
+            <span class="material-symbols-outlined font-black">dashboard</span>
+            <span class="font-label-md text-base">Visão Geral</span>
+        </NavLink>
+        
+        <NavLink class="flex items-center gap-3 p-4 text-on-surface border-2 border-transparent font-bold transition-all duration-200 hover:bg-[#ecdcff] hover:border-on-background hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 hover:-translate-x-1" href="/admin/inventory">
+            <span class="material-symbols-outlined">menu_book</span>
+            <span class="font-label-md text-base">Inventário</span>
+        </NavLink>
+    </div>
+    
+    <div class="mt-auto pt-6 border-t-2 border-on-background flex flex-col gap-2 pb-6">
+        <a class="flex items-center gap-3 p-3 text-on-surface hover:bg-surface-variant transition-colors duration-200 border-2 border-transparent font-bold" href="#">
+            <span class="material-symbols-outlined">help</span>
+            <span class="font-label-md">Ajuda</span>
+        </a>
+        
+        <a class="flex items-center gap-3 p-3 text-on-surface hover:bg-[#ffdad6] hover:text-[#93000a] transition-colors duration-200 border-2 border-transparent font-bold" href="/">
+            <span class="material-symbols-outlined">logout</span>
+            <span class="font-label-md">Sair do Admin</span>
+        </a>
+    </div>
+</nav>
