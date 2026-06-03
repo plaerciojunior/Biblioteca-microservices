@@ -1,0 +1,68 @@
+@page "/register"
+@layout BibliotecaMicroservice.Layout.AuthLayout
+@inject NavigationManager NavManager
+
+<div class="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 font-body-md overflow-x-hidden">
+    <!-- Fundo Desfocado -->
+    <div class="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center"></div>
+    <div class="fixed inset-0 z-0 bg-white/50 backdrop-blur-md"></div>
+    
+    <!-- Card -->
+    <main class="relative z-10 w-full max-w-2xl bg-[#FFF8ED] border-4 border-on-background shadow-[12px_12px_0px_0px_#1d1b1f] flex flex-col my-8">
+        
+        <!-- Cabeçalho idêntico ao Login -->
+        <header class="bg-[#D1B3FF] border-b-4 border-on-background p-8 text-center flex flex-col items-center justify-center">
+            <h1 class="font-display-lg text-4xl md:text-5xl font-black uppercase text-on-background tracking-tighter leading-none">NOVO LEITOR</h1>
+            <p class="font-body-lg font-bold text-on-surface-variant mt-3 uppercase text-xs tracking-widest">Junte-se ao Digital Sanctuary</p>
+        </header>
+        
+        <!-- Formulário em Grid -->
+        <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="space-y-2 md:col-span-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Nome Completo</label>
+                <input type="text" @bind="RegisterModel.FullName" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="Ex: Antonieta Silva" />
+            </div>
+
+            <div class="space-y-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Usuário</label>
+                <input type="text" @bind="RegisterModel.Username" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="tonisilva" />
+            </div>
+            
+            <div class="space-y-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Email</label>
+                <input type="email" @bind="RegisterModel.Email" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="toni@exemplo.com" />
+            </div>
+            
+            <div class="space-y-2 md:col-span-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Senha</label>
+                <input type="password" @bind="RegisterModel.Password" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="••••••••" />
+            </div>
+            
+            <div class="md:col-span-2 mt-2 space-y-6">
+                <button @onclick="FazerCadastro" class="w-full bg-[#ccc460] border-4 border-on-background p-4 font-headline-lg text-2xl font-black uppercase text-on-background shadow-[6px_6px_0px_0px_#1d1b1f] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all">
+                    CRIAR CONTA
+                </button>
+                
+                <div class="pt-6 border-t-4 border-on-background text-center">
+                    <a href="/login" class="font-body-lg font-bold text-on-background underline decoration-4 underline-offset-4 hover:bg-[#D1B3FF] px-2 py-1 transition-colors">
+                        Já é membro? Faça Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    private RegisterRequest RegisterModel = new();
+
+    private void FazerCadastro() => NavManager.NavigateTo("/login");
+
+    public class RegisterRequest {
+        public string FullName { get; set; } = "";
+        public string Username { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

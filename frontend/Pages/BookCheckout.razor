@@ -1,4 +1,5 @@
 @layout MainLayout
+@using BibliotecaMicroservice.Models
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
     
@@ -109,7 +110,7 @@
     private DateTime ReturnDate { get; set; } = DateTime.Now.AddDays(14);
     
     // Mock dos dados brutos do livro
-    private BookModel Book = new BookModel
+    private Book Book = new Book
     {
         Title = "Neuromancer",
         Author = "William Gibson",
@@ -119,12 +120,5 @@
     private async Task FecharModal()
     {
         await OnClose.InvokeAsync();
-    }
-
-    public class BookModel
-    {
-        public string Title { get; set; } = "";
-        public string Author { get; set; } = "";
-        public string CoverUrl { get; set; } = "";
     }
 }

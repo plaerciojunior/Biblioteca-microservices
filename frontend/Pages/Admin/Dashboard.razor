@@ -1,5 +1,6 @@
 @page "/admin/dashboard"
 @layout AdminLayout
+@using BibliotecaMicroservice.Models
 
 <style>
     .chart-axis { stroke: #1d1b1f; stroke-width: 2; vector-effect: non-scaling-stroke; }
@@ -313,27 +314,27 @@
 @code {
     private bool showModal = false;
     private bool isEditMode = false;
-    private InventoryItem editingBook = new();
+    private Book editingBook = new();
 
-    private List<InventoryItem> Books = new()
+    private List<Book> Books = new()
     {
-        new InventoryItem { Id = 1, Title = "Neuromancer", Author = "William Gibson", ISBN = "978-0441569595", Status = BookStatus.Available },
-        new InventoryItem { Id = 2, Title = "Snow Crash", Author = "Neal Stephenson", ISBN = "978-0553380958", Status = BookStatus.Loaned },
-        new InventoryItem { Id = 3, Title = "A Mão Esquerda da Escuridão", Author = "Ursula K. Le Guin", ISBN = "978-0441478125", Status = BookStatus.Available },
-        new InventoryItem { Id = 4, Title = "Dune", Author = "Frank Herbert", ISBN = "978-0441172719", Status = BookStatus.Overdue }
+        new Book { Id = 1, Title = "Neuromancer", Author = "William Gibson", ISBN = "978-0441569595", Status = BookStatus.Available },
+        new Book { Id = 2, Title = "Snow Crash", Author = "Neal Stephenson", ISBN = "978-0553380958", Status = BookStatus.Loaned },
+        new Book { Id = 3, Title = "A Mão Esquerda da Escuridão", Author = "Ursula K. Le Guin", ISBN = "978-0441478125", Status = BookStatus.Available },
+        new Book { Id = 4, Title = "Dune", Author = "Frank Herbert", ISBN = "978-0441172719", Status = BookStatus.Overdue }
     };
 
-    private void AbrirModal(InventoryItem book)
+    private void AbrirModal(Book book)
     {
         if (book == null)
         {
             isEditMode = false;
-            editingBook = new InventoryItem { Status = BookStatus.Available };
+            editingBook = new Book { Status = BookStatus.Available };
         }
         else
         {
             isEditMode = true;
-            editingBook = new InventoryItem 
+            editingBook = new Book 
             { 
                 Id = book.Id, 
                 Title = book.Title, 
@@ -353,21 +354,5 @@
     private void SalvarLivro()
     {
         showModal = false;
-    }
-
-    public class InventoryItem
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string Author { get; set; } = "";
-        public string ISBN { get; set; } = "";
-        public BookStatus Status { get; set; }
-    }
-
-    public enum BookStatus
-    {
-        Available,
-        Loaned,
-        Overdue
     }
 }

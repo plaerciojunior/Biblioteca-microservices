@@ -1,0 +1,250 @@
+@page "/"
+@layout BibliotecaMicroservice.Layout.AuthLayout
+@using BibliotecaMicroservice.Models
+
+<style>
+    .brutal-border { border: 2px solid #1d1b1f; }
+    .brutal-shadow { box-shadow: 5px 5px 0px 0px #1d1b1f; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .brutal-shadow:active, .brutal-shadow-hover:hover { box-shadow: 2px 2px 0px 0px #1d1b1f; transform: translate(3px, 3px); }
+    .brutal-shadow-hover:active { box-shadow: 1px 1px 0px 0px #1d1b1f; transform: translate(4px, 4px); }
+    
+    .card-hover { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .card-hover:hover { transform: scale(1.02) translateY(-4px); box-shadow: 8px 8px 0px 0px #1d1b1f; }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @@keyframes slideUpFade {
+        0% { opacity: 0; transform: translateY(40px); }
+        60% { transform: translateY(-5px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @@keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+
+    @@keyframes popIn {
+        0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+        70% { transform: scale(1.05) translateY(-5px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    @@keyframes scanline {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+    }
+
+    @@keyframes infinite-scroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(calc(-100% - 24px)); }
+    }
+
+    .animate-hero-enter {
+        animation: slideUpFade 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        opacity: 0;
+    }
+
+    .animate-float {
+        animation: float 4s ease-in-out infinite;
+    }
+
+    .animate-infinite-scroll {
+        animation: infinite-scroll 25s linear infinite;
+    }
+
+    .book-card-reveal {
+        opacity: 0;
+        animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    .ambient-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
+        background: 
+            linear-gradient(rgba(255, 255, 255, 0) 50%, rgba(0, 0, 0, 0.02) 50%),
+            linear-gradient(90deg, rgba(255, 0, 0, 0.01), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.01));
+        background-size: 100% 4px, 3px 100%;
+    }
+
+    .scanline-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 20%;
+        background: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.03), rgba(0,0,0,0));
+        animation: scanline 8s linear infinite;
+    }
+
+    .portal-card {
+        transition: transform 0.2s ease-out;
+        transform-style: preserve-3d;
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .animate-hero-enter, .animate-float, .book-card-reveal, .scanline-overlay, .portal-card, .brutal-shadow, .card-hover, .animate-infinite-scroll {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+            opacity: 1 !important;
+        }
+    }
+</style>
+
+<div class="bg-[#FFF8ED] text-on-surface font-body-md min-h-screen flex flex-col relative z-0 overflow-x-hidden">
+    <div class="ambient-bg">
+        <div class="scanline-overlay"></div>
+    </div>
+    
+    <!-- TopNavBar -->
+    <nav class="bg-[#FFF8ED] w-full h-16 border-b-2 border-on-surface transition-all duration-200 sticky top-0 z-50">
+        <div class="flex justify-between items-center px-4 md:px-10 max-w-container-max mx-auto h-full">
+            <div class="font-headline-md text-2xl font-black text-on-surface tracking-tight uppercase">
+                Digital Sanctuary
+            </div>
+            <a class="bg-[#D1B3FF] text-on-surface font-bold text-sm px-6 py-2 border-2 border-on-surface shadow-[4px_4px_0px_0px_#1d1b1f] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#1d1b1f] transition-all uppercase" href="/login">
+                Entrar
+            </a>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex flex-col items-center w-full pb-24">
+        <!-- Hero Section -->
+        <section class="w-full max-w-container-max px-4 md:px-10 mt-16 md:mt-32 mb-24 flex flex-col items-center text-center">
+            <h1 class="font-display-lg text-5xl md:text-7xl font-black uppercase max-w-4xl mb-6 animate-hero-enter tracking-tighter" style="animation-delay: 0.1s;">Leia sem fronteiras.</h1>
+            <p class="font-body-lg text-xl font-bold text-on-surface-variant max-w-2xl mb-12 animate-hero-enter uppercase tracking-wider" style="animation-delay: 0.3s;">
+                Acesse mais de 5.000 livros físicos e digitais da sua casa. A experiência de biblioteca definitiva.
+            </p>
+            <div class="animate-float" style="animation-delay: 0.5s;">
+                <a class="bg-primary-container text-on-surface font-headline-md text-2xl font-black uppercase px-12 py-4 brutal-border brutal-shadow brutal-shadow-hover rounded-none hover:bg-secondary-container flex items-center gap-3 animate-hero-enter" href="/register" style="animation-delay: 0.5s;">
+                    Junte-se à Biblioteca
+                    <span class="material-symbols-outlined font-black">arrow_forward</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- Featured Books Gallery (Carrossel) -->
+        <section class="w-full max-w-container-max mb-32 overflow-hidden z-10 relative">
+            <div class="px-4 md:px-10 mb-8 flex justify-between items-end w-full">
+                <h2 class="font-headline-lg text-3xl font-black uppercase text-on-surface tracking-tight">Acervo em Destaque</h2>
+                <a class="font-label-md text-sm font-bold hover:bg-[#D1B3FF] border-2 border-transparent hover:border-on-background px-4 py-2 transition-all uppercase" href="/catalog">Ver Todos</a>
+            </div>
+            
+            <div class="w-full overflow-hidden group pb-12 pt-4" id="gallery-container">
+                <div class="flex gap-8 w-max">
+                    
+                    <!-- Set 1 (Primeira Trilha) -->
+                    <div class="flex gap-8 flex-shrink-0 animate-infinite-scroll group-hover:[animation-play-state:paused]">
+                        @foreach (var book in FeaturedBooks)
+                        {
+                            <div class="min-w-[280px] bg-white brutal-border brutal-shadow flex-shrink-0 group/card cursor-pointer card-hover">
+                                <div class="h-80 w-full border-b-2 border-on-background bg-surface-variant relative overflow-hidden">
+                                    <!-- Aqui está a mágica do hover que remove o P/B e dá o zoom -->
+                                    <img alt="Capa de @book.Title" class="object-cover w-full h-full grayscale group-hover/card:grayscale-0 transition-all duration-500 group-hover/card:scale-105" src="@book.CoverUrl"/>
+                                    <!-- Sobreposição de cor que também some no hover -->
+                                    <div class="absolute inset-0 bg-[#d1b3ff]/20 mix-blend-multiply group-hover/card:opacity-0 transition-opacity duration-300"></div>
+                                </div>
+                                <div class="p-4 bg-[#FFF8ED]">
+                                    <div class="font-label-sm text-xs text-on-surface-variant mb-1 uppercase tracking-wider font-bold">@book.Category</div>
+                                    <h3 class="font-headline-md text-xl font-black leading-tight mb-2 uppercase">@book.Title</h3>
+                                    <p class="font-body-md text-on-surface-variant font-bold uppercase text-sm">@book.Author</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Set 2 (Cópia exata para o scroll infinito não ter quebra) -->
+                    <div aria-hidden="true" class="flex gap-8 flex-shrink-0 animate-infinite-scroll group-hover:[animation-play-state:paused]">
+                        @foreach (var book in FeaturedBooks)
+                        {
+                            <div class="min-w-[280px] bg-white brutal-border brutal-shadow flex-shrink-0 group/card cursor-pointer card-hover">
+                                <div class="h-80 w-full border-b-2 border-on-background bg-surface-variant relative overflow-hidden">
+                                    <img alt="Capa de @book.Title" class="object-cover w-full h-full grayscale group-hover/card:grayscale-0 transition-all duration-500 group-hover/card:scale-105" src="@book.CoverUrl"/>
+                                    <div class="absolute inset-0 bg-[#d1b3ff]/20 mix-blend-multiply group-hover/card:opacity-0 transition-opacity duration-300"></div>
+                                </div>
+                                <div class="p-4 bg-[#FFF8ED]">
+                                    <div class="font-label-sm text-xs text-on-surface-variant mb-1 uppercase tracking-wider font-bold">@book.Category</div>
+                                    <h3 class="font-headline-md text-xl font-black leading-tight mb-2 uppercase">@book.Title</h3>
+                                    <p class="font-body-md text-on-surface-variant font-bold uppercase text-sm">@book.Author</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Access Portals -->
+        <section class="w-full max-w-container-max px-4 md:px-10 mb-24">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Reader Portal -->
+                <div class="bg-[#FFB7C5] brutal-border brutal-shadow p-8 flex flex-col justify-between min-h-[360px] portal-card">
+                    <div>
+                        <div class="w-16 h-16 bg-white brutal-border flex items-center justify-center mb-6 shadow-[4px_4px_0px_0px_#1d1b1f]">
+                            <span class="material-symbols-outlined text-4xl font-black">menu_book</span>
+                        </div>
+                        <h3 class="font-display-lg text-4xl font-black uppercase text-on-surface mb-4 tracking-tighter">Portal do Leitor</h3>
+                        <p class="font-body-lg text-lg font-bold text-on-surface-variant max-w-md uppercase tracking-wider">
+                            Mergulhe na nossa coleção. Pegue emprestado, reserve e leia arquivos digitais em um ambiente livre de distrações.
+                        </p>
+                    </div>
+                    <div class="mt-8">
+                        <a class="inline-flex bg-white text-on-surface font-headline-md text-xl font-black uppercase px-8 py-4 brutal-border brutal-shadow brutal-shadow-hover hover:bg-[#D1B3FF] transition-colors items-center gap-3" href="/login">
+                            Login Leitor
+                            <span class="material-symbols-outlined font-black">login</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Admin Area -->
+                <div class="bg-[#e7e0e7] brutal-border brutal-shadow p-8 flex flex-col justify-between min-h-[360px] portal-card">
+                    <div>
+                        <div class="w-16 h-16 bg-white brutal-border flex items-center justify-center mb-6 shadow-[4px_4px_0px_0px_#1d1b1f]">
+                            <span class="material-symbols-outlined text-4xl font-black">admin_panel_settings</span>
+                        </div>
+                        <h3 class="font-display-lg text-4xl font-black uppercase text-on-surface mb-4 tracking-tighter">Acesso Restrito</h3>
+                        <p class="font-body-lg text-lg font-bold text-on-surface-variant max-w-md uppercase tracking-wider">
+                            Área de Staff. Gerencie o inventário, processe devoluções e supervisione o arquivo digital.
+                        </p>
+                    </div>
+                    <div class="mt-8">
+                        <a class="inline-flex bg-white text-on-surface font-headline-md text-xl font-black uppercase px-8 py-4 brutal-border brutal-shadow brutal-shadow-hover hover:bg-surface-dim transition-colors items-center gap-3" href="/admin-login">
+                            Login Admin
+                            <span class="material-symbols-outlined font-black">vpn_key</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-surface-variant w-full py-12 border-t-4 border-on-surface mt-auto z-10 relative">
+        <div class="flex flex-col md:flex-row justify-between items-center px-4 md:px-10 max-w-container-max mx-auto gap-8">
+            <div class="font-headline-sm text-lg font-black uppercase text-on-surface">
+                © 2024 Digital Sanctuary. A Lo-Fi Archive Experience.
+            </div>
+        </div>
+    </footer>
+</div>
+
+@code {
+    // Lista de livros simulada para desenhar o carrossel
+    private List<Book> FeaturedBooks = new()
+    {
+        new Book { Title = "Neuromancer", Author = "William Gibson", Category = "Cyberpunk", CoverUrl = "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?q=80&w=600&auto=format&fit=crop" },
+        new Book { Title = "Snow Crash", Author = "Neal Stephenson", Category = "Sci-Fi", CoverUrl = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=600&auto=format&fit=crop" },
+        new Book { Title = "Foundation", Author = "Isaac Asimov", Category = "Classic Sci-Fi", CoverUrl = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600&auto=format&fit=crop" },
+        new Book { Title = "Dune", Author = "Frank Herbert", Category = "Epic Fantasy", CoverUrl = "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?q=80&w=600&auto=format&fit=crop" },
+        new Book { Title = "Mona Lisa Overdrive", Author = "William Gibson", Category = "Cyberpunk", CoverUrl = "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop" }
+    };
+}

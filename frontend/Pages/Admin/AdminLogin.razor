@@ -1,0 +1,78 @@
+@page "/admin-login"
+@layout BibliotecaMicroservice.Layout.AuthLayout
+@inject NavigationManager NavManager
+
+<div class="bg-surface-container bg-grid-pattern min-h-screen flex items-center justify-center p-4 md:p-8 antialiased text-on-background overflow-x-hidden">
+    
+    <!-- Main Login Card -->
+    <main class="w-full max-w-[480px]">
+        <div class="bg-surface-bright border-4 border-on-background p-8 md:p-10 shadow-[8px_8px_0px_0px_#1d1b1f] relative overflow-hidden">
+            
+            <!-- Decorative Accent -->
+            <div class="absolute top-0 left-0 w-full h-3 bg-primary"></div>
+            
+            <!-- Header -->
+            <div class="flex items-center gap-4 mb-8 border-b-4 border-on-background pb-6 mt-2">
+                <span class="material-symbols-outlined text-[40px] text-primary" style="font-variation-settings: 'FILL' 1;">
+                    admin_panel_settings
+                </span>
+                <h1 class="font-headline-lg text-3xl font-black text-on-background uppercase tracking-tighter m-0 leading-none">
+                    Acesso Restrito
+                </h1>
+            </div>
+            
+            <!-- Login Form -->
+            <div class="space-y-6">
+                <div class="space-y-2">
+                    <label class="block font-label-md font-bold text-on-surface-variant uppercase tracking-wider text-sm">Usuário Admin</label>
+                    <input type="text" @bind="LoginModel.Username" class="w-full bg-white border-4 border-on-background px-4 py-3 font-body-lg font-bold text-on-background placeholder:text-outline focus:outline-none shadow-[4px_4px_0px_0px_#1d1b1f] transition-all duration-200 focus:shadow-[2px_2px_0px_0px_#1d1b1f] focus:translate-x-[2px] focus:translate-y-[2px]" placeholder="admin" />
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="block font-label-md font-bold text-on-surface-variant uppercase tracking-wider text-sm">Senha</label>
+                    <input type="password" @bind="LoginModel.Password" class="w-full bg-white border-4 border-on-background px-4 py-3 font-body-lg font-bold text-on-background placeholder:text-outline focus:outline-none shadow-[4px_4px_0px_0px_#1d1b1f] transition-all duration-200 focus:shadow-[2px_2px_0px_0px_#1d1b1f] focus:translate-x-[2px] focus:translate-y-[2px]" placeholder="••••••••" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="bg-[#ffdad6] text-[#93000a] border-4 border-on-background p-4 font-bold uppercase text-center shadow-[4px_4px_0px_0px_#1d1b1f]">
+                        @ErrorMessage
+                    </div>
+                }
+                
+                <div class="pt-4">
+                    <button @onclick="FazerLogin" class="w-full bg-on-background text-white border-4 border-on-background py-4 font-headline-md text-2xl font-black uppercase tracking-wider shadow-[6px_6px_0px_0px_#ccc460] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_#ccc460] transition-all flex justify-center items-center gap-3 group">
+                        <span>ENTRAR</span>
+                        <span class="material-symbols-outlined font-black text-[24px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Footer / Back Link -->
+            <div class="mt-8 text-center pt-6 border-t-4 border-on-background">
+                <a href="/" class="inline-flex items-center gap-2 font-label-md font-bold text-on-surface-variant hover:text-primary transition-colors decoration-2 underline-offset-4 hover:underline uppercase text-sm">
+                    <span class="material-symbols-outlined text-[18px] font-black">arrow_back</span>
+                    Voltar para a Página Inicial
+                </a>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    private LoginRequest LoginModel = new();
+    private string ErrorMessage = "";
+
+    private void FazerLogin() {
+        if (LoginModel.Username == "admin" && LoginModel.Password == "admin") {
+            NavManager.NavigateTo("/admin/dashboard");
+        } else {
+            ErrorMessage = "Credenciais inválidas. Tente admin / admin.";
+        }
+    }
+
+    public class LoginRequest {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}

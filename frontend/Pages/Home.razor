@@ -1,5 +1,6 @@
-﻿@page "/"
+﻿@page "/catalog"
 @layout MainLayout
+@using BibliotecaMicroservice.Models
 
 @* Adicionamos um pt-12 (padding-top) para "abaixar" o conteúdo conforme solicitado *@
 <div class="flex flex-col gap-12 pt-12">
@@ -61,36 +62,12 @@
         </div>
     </section>
 
-    <section class="flex flex-col gap-6 pb-16">
-        <h2 class="font-display-lg text-3xl uppercase border-b-4 border-on-background pb-2 w-max pr-8 font-black italic">
-            Explorar Acervo
-        </h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            @foreach (var book in AllBooks)
-            {
-                <article class="bg-surface-container-lowest border-2 border-on-background neo-shadow flex flex-col h-full group">
-                    <div class="h-56 border-b-2 border-on-background bg-surface-variant overflow-hidden">
-                        <img src="@book.CoverUrl" class="w-full h-full object-cover grayscale mix-blend-luminosity opacity-90 group-hover:scale-110 transition-transform" />
-                    </div>
-                    <div class="p-4 flex flex-col flex-grow justify-between">
-                        <div class="mb-4">
-                            <h4 class="font-headline-md text-base uppercase leading-tight font-black line-clamp-2">@book.Title</h4>
-                            <p class="font-label-md text-[10px] text-on-surface-variant uppercase mt-1 font-bold">@book.Author</p>
-                        </div>
-                        <button class="w-full bg-primary-container border-2 border-on-background py-2 font-label-md text-xs font-bold uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
-                            EMPRÉSTIMO
-                        </button>
-                    </div>
-                </article>
-            }
-        </div>
         
         <div class="flex justify-center mt-12">
             <button class="px-12 py-4 border-4 border-on-background bg-white font-headline-md text-2xl font-black uppercase neo-shadow hover:bg-secondary-container hover:-translate-x-1 hover:-translate-y-1 transition-all">
                 Carregar Mais
             </button>
         </div>
-    </section>
 </div>
 
 @if (selectedBookId.HasValue)
@@ -102,18 +79,18 @@
     private int? selectedBookId;
     private List<string> Tags = new() { "SCI-FI", "ARCHITECTURE", "TECH", "DESIGN" };
 
-    private List<BookBrief> FeaturedBooks = new() {
-        new BookBrief { Title = "Neuromancer", Author = "William Gibson", CoverUrl = "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?w=400" },
-        new BookBrief { Title = "Form & Space", Author = "Francis D.K.", CoverUrl = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400" },
-        new BookBrief { Title = "Hackers", Author = "Steven Levy", CoverUrl = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400" }
+    private List<Book> FeaturedBooks = new() {
+        new Book { Title = "Neuromancer", Author = "William Gibson", CoverUrl = "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?w=400" },
+        new Book { Title = "Form & Space", Author = "Francis D.K.", CoverUrl = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400" },
+        new Book { Title = "Hackers", Author = "Steven Levy", CoverUrl = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400" }
     };
 
-    private List<BookBrief> AllBooks = new() {
-        new BookBrief { Title = "Dune", Author = "Frank Herbert", CoverUrl = "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=300" },
-        new BookBrief { Title = "Grid Systems", Author = "J. Müller-Brockmann", CoverUrl = "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=300" },
-        new BookBrief { Title = "Snow Crash", Author = "Neal Stephenson", CoverUrl = "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300" },
-        new BookBrief { Title = "Typography", Author = "Emil Ruder", CoverUrl = "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=300" },
-        new BookBrief { Title = "Simulacra", Author = "Jean Baudrillard", CoverUrl = "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?w=300" }
+    private List<Book> AllBooks = new() {
+        new Book { Title = "Dune", Author = "Frank Herbert", CoverUrl = "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=300" },
+        new Book { Title = "Grid Systems", Author = "J. Müller-Brockmann", CoverUrl = "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=300" },
+        new Book { Title = "Snow Crash", Author = "Neal Stephenson", CoverUrl = "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300" },
+        new Book { Title = "Typography", Author = "Emil Ruder", CoverUrl = "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=300" },
+        new Book { Title = "Simulacra", Author = "Jean Baudrillard", CoverUrl = "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?w=300" }
     };
 
     private void AbrirCheckout(int id) {
@@ -122,12 +99,5 @@
 
     private void FecharCheckout() {
         selectedBookId = null;
-    }
-
-    public class BookBrief {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string Author { get; set; } = "";
-        public string CoverUrl { get; set; } = "";
     }
 }

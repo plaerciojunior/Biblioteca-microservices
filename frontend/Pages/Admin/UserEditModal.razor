@@ -1,0 +1,104 @@
+@using BibliotecaMicroservice.Models
+
+<div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-10 overflow-y-auto">
+    <div class="bg-[#FFF8ED] w-full max-w-4xl border-4 border-on-background shadow-[12px_12px_0px_0px_#1d1b1f] relative my-auto">
+        
+        <!-- Header -->
+        <div class="border-b-4 border-on-background p-6 flex justify-between items-center bg-[#D1B3FF]">
+            <h2 class="font-display-lg text-3xl md:text-4xl font-black uppercase text-on-background m-0 tracking-tighter">Editar Leitor</h2>
+            <button @onclick="Fechar" class="h-10 w-10 border-4 border-on-background flex items-center justify-center bg-white hover:bg-[#FFB7C5] hover:translate-x-[2px] hover:translate-y-[2px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <span class="material-symbols-outlined font-black text-on-background">close</span>
+            </button>
+        </div>
+        
+        <!-- Body -->
+        <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            
+            <!-- Left Column: Informações do Usuário e Danger Zone -->
+            <div class="flex flex-col gap-6">
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="font-label-md font-bold uppercase tracking-wide">Nome Completo</label>
+                        <input @bind="User.Name" type="text" class="w-full bg-white border-4 border-on-background p-3 font-body-lg font-bold focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="font-label-md font-bold uppercase tracking-wide">Email</label>
+                        <input @bind="User.Email" type="email" class="w-full bg-white border-4 border-on-background p-3 font-body-lg font-bold focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all" />
+                    </div>
+                </div>
+                
+                <div class="mt-auto pt-6 border-t-4 border-on-background border-dashed">
+                    <div class="bg-[#ffdad6] border-4 border-on-background p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#93000a] font-black">warning</span>
+                            <h3 class="font-headline-md text-2xl font-black text-[#93000a] uppercase">Zona de Perigo</h3>
+                        </div>
+                        <p class="font-body-md font-bold text-[#93000a]">Revogar acesso à biblioteca imediatamente. O usuário será bloqueado.</p>
+                        <button @onclick="BloquearUsuario" class="w-full bg-[#93000a] text-white font-label-md font-black uppercase border-4 border-on-background py-3 px-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+                            @(User.IsActive ? "BLOQUEAR USUÁRIO" : "DESBLOQUEAR USUÁRIO")
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column: Livros Emprestados -->
+            <div class="flex flex-col gap-6">
+                <h3 class="font-headline-md text-2xl font-black uppercase border-b-4 border-on-background pb-2">Empréstimos Atuais</h3>
+                <div class="flex flex-col gap-4 overflow-y-auto max-h-[400px] pr-2">
+                    @if (User.ActiveLoans.Any()) {
+                        @foreach (var loan in User.ActiveLoans) {
+                            <div class="flex flex-col bg-white border-4 border-on-background shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] p-4 gap-4">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h4 class="font-headline-md text-xl font-black leading-tight uppercase">@loan.BookTitle</h4>
+                                        <p class="font-body-md text-on-surface-variant font-bold uppercase text-sm">@loan.BookAuthor</p>
+                                    </div>
+                                    @if (loan.IsOverdue) {
+                                        <span class="border-4 border-on-background px-2 py-1 font-label-sm font-bold uppercase bg-[#ffdad6] text-[#93000a] whitespace-nowrap shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Atrasado</span>
+                                    } else {
+                                        <span class="border-4 border-on-background px-2 py-1 font-label-sm font-bold uppercase bg-[#ccc460] text-on-background whitespace-nowrap shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">Ativo</span>
+                                    }
+                                </div>
+                                <div class="flex justify-between items-center border-t-4 border-dashed border-on-background pt-3 mt-1">
+                                    <span class="font-label-md font-bold text-xs uppercase text-on-surface-variant">Vence em: @loan.DueDate.ToString("dd/MM/yyyy")</span>
+                                    <button @onclick="() => RevogarEmprestimo(loan)" class="font-label-md font-black text-xs hover:text-[#93000a] transition-colors uppercase underline decoration-2 underline-offset-4">Revogar</button>
+                                </div>
+                            </div>
+                        }
+                    } else {
+                        <div class="bg-surface-variant border-4 border-on-background border-dashed p-6 text-center font-bold uppercase text-on-surface-variant shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                            Nenhum empréstimo ativo.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="border-t-4 border-on-background p-6 bg-surface-variant flex justify-end gap-4">
+            <button @onclick="Fechar" class="bg-white border-4 border-on-background py-3 px-6 font-label-md font-black uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                Cancelar
+            </button>
+            <button @onclick="Fechar" class="bg-[#D1B3FF] border-4 border-on-background py-3 px-8 font-label-md font-black uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                SALVAR ALTERAÇÕES
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ReaderUser User { get; set; } = default!;
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private Task Fechar() => OnClose.InvokeAsync();
+
+    private void RevogarEmprestimo(Loan loan)
+    {
+        User.ActiveLoans.Remove(loan);
+    }
+
+    private void BloquearUsuario()
+    {
+        User.IsActive = !User.IsActive; // Altera de Ativo para Bloqueado (e vice-versa)
+    }
+}

@@ -1,0 +1,67 @@
+@page "/login"
+@layout BibliotecaMicroservice.Layout.AuthLayout
+@inject NavigationManager NavManager
+
+<div class="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 font-body-md overflow-x-hidden">
+    <!-- Fundo Desfocado -->
+    <div class="fixed inset-0 z-0 bg-[url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center"></div>
+    <div class="fixed inset-0 z-0 bg-white/50 backdrop-blur-md"></div>
+    
+    <!-- Card -->
+    <main class="relative z-10 w-full max-w-md bg-[#FFF8ED] border-4 border-on-background shadow-[12px_12px_0px_0px_#1d1b1f] flex flex-col my-8">
+        
+        <!-- Cabeçalho -->
+        <header class="bg-[#D1B3FF] border-b-4 border-on-background p-8 text-center flex flex-col items-center justify-center">
+            <h1 class="font-display-lg text-4xl md:text-5xl font-black uppercase text-on-background tracking-tighter leading-none">DIGITAL<br/>SANCTUARY</h1>
+            <p class="font-body-lg font-bold text-on-surface-variant mt-3 uppercase text-xs tracking-widest">Acesse sua conta</p>
+        </header>
+        
+        <!-- Formulário -->
+        <div class="p-8 space-y-6">
+            <div class="space-y-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Usuário</label>
+                <input type="text" @bind="LoginModel.Username" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="Digite seu usuário" />
+            </div>
+            
+            <div class="space-y-2">
+                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Senha</label>
+                <input type="password" @bind="LoginModel.Password" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="••••••••" />
+            </div>
+            
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="bg-[#ffdad6] text-[#93000a] border-4 border-on-background p-4 font-bold uppercase text-center shadow-[4px_4px_0px_0px_#1d1b1f]">
+                    @ErrorMessage
+                </div>
+            }
+
+            <button @onclick="FazerLogin" class="w-full mt-4 bg-[#ccc460] border-4 border-on-background p-4 font-headline-lg text-2xl font-black uppercase text-on-background shadow-[6px_6px_0px_0px_#1d1b1f] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all">
+                ENTRAR
+            </button>
+            
+            <div class="pt-6 mt-6 border-t-4 border-on-background text-center">
+                <a href="/register" class="font-body-lg font-bold text-on-background underline decoration-4 underline-offset-4 hover:bg-[#D1B3FF] px-2 py-1 transition-colors">
+                    Ainda não é leitor? Cadastre-se
+                </a>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    private LoginRequest LoginModel = new();
+    private string ErrorMessage = "";
+
+    private void FazerLogin() {
+        if (LoginModel.Username == "user" && LoginModel.Password == "123456") {
+            NavManager.NavigateTo("/catalog");
+        } else {
+            ErrorMessage = "Usuário ou senha inválidos. Tente user / 123456.";
+        }
+    }
+
+    public class LoginRequest {
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
+    }
+}
