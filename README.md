@@ -26,11 +26,13 @@ docs/API.md
 
 # Biblioteca-microservice
 
+## Como rodar a aplicação
 
-Para rodar o npx rode esse comando em outro terminal
-npx tailwindcss -i ./wwwroot/css/app.css -o ./wwwroot/css/tailwind.css --watch
+O projeto foi unificado utilizando Docker Compose. Para iniciar todos os serviços (Frontend, Backend e Bancos de Dados) de uma só vez, basta ter o Docker instalado e rodar o seguinte comando na raiz do projeto:
 
-E em outro terminal utilize
-dotnet run
+```bash
+docker compose up --build
+```
 
-dessa maneira rodara tranquilamente o frontend
+- **Frontend (Blazor):** Estará disponível em `http://localhost:8080`
+- **API Gateway (Flask):** Estará disponível em `http://localhost:5000`

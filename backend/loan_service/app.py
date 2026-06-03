@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request
 from pony.orm import db_session, select, commit
 from bd.models import db, Emprestimo
@@ -5,6 +6,9 @@ import requests
 from datetime import datetime, timezone
 
 app = Flask(__name__)
+
+USER_SERVICE = os.environ.get('USER_SERVICE_URL', 'http://localhost:5001')
+BOOK_SERVICE = os.environ.get('BOOK_SERVICE_URL', 'http://localhost:5002')
 
 #Criar um empréstimo de livro
 @app.route('/loans', methods=['POST'])
@@ -16,7 +20,7 @@ def criar_emprestimo():
     usuario_id = data['usuario_id']
     livro_id = data['livro_id']
     usuario = requests.get(
-        f'http://localhost:5001/users/{usuario_id}'
+        f'{USER_SERVICE}/users/{usuario_id}'
     )
 
     if usuario.status_code != 200:
@@ -26,7 +30,7 @@ def criar_emprestimo():
 
     # Verificar livro
     livro = requests.get(
-        f'http://localhost:5002/books/{int(livro_id)}'
+        f'{BOOK_SERVICE}/books/{int(livro_id)}'
     )
 
     if livro.status_code != 200:
@@ -48,7 +52,7 @@ def criar_emprestimo():
 
     # Atualizar disponibilidade do livro
     requests.put(
-        f'http://localhost:5002/books/{livro_id}',
+        f'{BOOK_SERVICE}/books/{livro_id}',
         json={"disponivel": False}
     )
 
@@ -119,7 +123,7 @@ def devolver_livro(id):
 
     # tornar livro disponível novamente
     requests.put(
-        f'http://localhost:5002/books/{loan.livro_id}',
+        f'{BOOK_SERVICE}/books/{loan.livro_id}',
         json={"disponivel": True}
     )
 
@@ -177,4 +181,4 @@ def listar_emprestimos_ativos():
 
 
 if __name__ == '__main__':
-    app.run(port=5003)
+    app.run(host="0.0.0.0", port=5003)

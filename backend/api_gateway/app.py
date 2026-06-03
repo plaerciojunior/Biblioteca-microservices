@@ -2,13 +2,20 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
 
+import os
+
 app = Flask(__name__)
 
 CORS(app)
-USER_SERVICE = 'http://localhost:5001'
-BOOK_SERVICE = 'http://localhost:5002'
-LOAN_SERVICE = 'http://localhost:5003'
+USER_SERVICE = os.environ.get('USER_SERVICE_URL', 'http://localhost:5001')
+BOOK_SERVICE = os.environ.get('BOOK_SERVICE_URL', 'http://localhost:5002')
+LOAN_SERVICE = os.environ.get('LOAN_SERVICE_URL', 'http://localhost:5003')
 #RECOMMENDATION_SERVICE = 'http://localhost:5004'
+
+#Rota Raiz
+@app.route('/', methods=['GET'])
+def index():
+    return jsonify({"message": "API Gateway está rodando! As rotas disponíveis são /users, /books e /loans."}), 200
 
 #ROTAS USUÁRIO
 
@@ -178,4 +185,4 @@ def listar_emprestimos_ativos():
     return jsonify(response.json()), response.status_code
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(host="0.0.0.0", port=5000)

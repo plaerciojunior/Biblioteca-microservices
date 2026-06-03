@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  api_gateway:
+    build:
+      context: ./backend/api_gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - USER_SERVICE_URL=http://user_service:5001
+      - BOOK_SERVICE_URL=http://book_service:5002
+      - LOAN_SERVICE_URL=http://loan_service:5003
+    depends_on:
+      - user_service
+      - book_service
+      - loan_service
+
+  user_service:
+    build:
+      context: ./backend/user_service
+    ports:
+      - "5001:5001"
+
+  book_service:
+    build:
+      context: ./backend/book_service
+    ports:
+      - "5002:5002"
+
+  loan_service:
+    build:
+      context: ./backend/loan_service
+    ports:
+      - "5003:5003"
+    environment:
+      - USER_SERVICE_URL=http://user_service:5001
+      - BOOK_SERVICE_URL=http://book_service:5002
+    depends_on:
+      - user_service
+      - book_service
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api_gateway
