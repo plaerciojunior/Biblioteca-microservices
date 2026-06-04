@@ -524,10 +524,11 @@ A API possui CORS habilitado através da biblioteca Flask-CORS.
 Frontend
 ↓
 API Gateway (5000)
-↓
-User Service (5001)
-Book Service (5002)
-Loan Service (5003)
+├─ User Service (5001)
+├─ Book Service (5002)
+├─ Loan Service (5003)
+├─ Analytics Service (5004)
+└─ Payment Service (5005)
 
 
 # Observações

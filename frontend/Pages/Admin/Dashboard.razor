@@ -1,6 +1,9 @@
 @page "/admin/dashboard"
 @layout AdminLayout
 @using BibliotecaMicroservice.Models
+@inject BibliotecaMicroservice.Handlers.AnalyticsHandler AnalyticsHandler
+@inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
+@inject IJSRuntime JSRuntime
 
 <style>
     .chart-axis { stroke: #1d1b1f; stroke-width: 2; vector-effect: non-scaling-stroke; }
@@ -21,7 +24,7 @@
         <h1 class="font-display-lg text-[40px] xl:text-[48px] text-on-background tracking-tighter uppercase font-black">Visão Geral</h1>
         <p class="font-body-lg text-on-surface-variant text-xl mt-2">Visão de desempenho e gerenciamento do acervo.</p>
     </div>
-    <button class="bg-primary-container border-2 border-on-background shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] transition-all px-6 py-3 font-label-md font-bold uppercase text-on-background flex items-center gap-2">
+    <button @onclick="ExportarCSV" class="bg-primary-container border-2 border-on-background shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[3px] hover:translate-y-[3px] transition-all px-6 py-3 font-label-md font-bold uppercase text-on-background flex items-center gap-2">
         <span class="material-symbols-outlined font-bold">download</span> Exportar Dados
     </button>
 </header>
@@ -35,7 +38,7 @@
                 <span class="material-symbols-outlined text-on-surface">book_4</span>
             </div>
         </div>
-        <div class="font-display-lg text-on-background text-4xl font-black mb-2">4.821</div>
+        <div class="font-display-lg text-on-background text-4xl font-black mb-2">@(DashboardData?.total_alugueis ?? 0)</div>
         <div class="flex items-center gap-2">
             <span class="bg-[#ccc460] border-2 border-on-background px-2 py-1 font-label-sm font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">trending_up</span> +12.5%
@@ -51,7 +54,7 @@
                 <span class="material-symbols-outlined text-on-surface">group</span>
             </div>
         </div>
-        <div class="font-display-lg text-secondary text-4xl font-black mb-2">1.204</div>
+        <div class="font-display-lg text-secondary text-4xl font-black mb-2">@(DashboardData?.usuarios_ativos ?? 0)</div>
         <div class="flex items-center gap-2">
             <span class="bg-surface-bright border-2 border-on-background px-2 py-1 font-label-sm font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">trending_up</span> +5.2%
@@ -67,7 +70,7 @@
                 <span class="material-symbols-outlined text-error font-bold">priority_high</span>
             </div>
         </div>
-        <div class="font-display-lg text-[#93000a] text-4xl font-black mb-2">37</div>
+        <div class="font-display-lg text-[#93000a] text-4xl font-black mb-2">@(DashboardData?.emprestimos_atrasados ?? 0)</div>
         <div class="flex items-center gap-2">
             <span class="bg-surface-bright border-2 border-on-background px-2 py-1 font-label-sm font-bold text-on-background flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">trending_down</span> -2.1%
@@ -83,7 +86,7 @@
                 <span class="material-symbols-outlined text-on-surface">schedule</span>
             </div>
         </div>
-        <div class="font-display-lg text-tertiary text-4xl font-black mb-2">4.2 <span class="text-xl">dias</span></div>
+        <div class="font-display-lg text-tertiary text-4xl font-black mb-2">@(DashboardData?.tempo_medio_retorno ?? 0) <span class="text-xl">dias</span></div>
         <div class="flex items-center gap-2">
             <span class="bg-surface-variant border-2 border-on-background px-2 py-1 font-label-sm font-bold flex items-center gap-1">
                 <span class="material-symbols-outlined text-[14px]">trending_flat</span> 0.0%
@@ -115,27 +118,19 @@
                 <line class="chart-axis" x1="50" x2="780" y1="320" y2="320"></line>
                 <line class="chart-axis" x1="50" x2="50" y1="40" y2="320"></line>
                 
-                <text class="chart-label label-y" x="40" y="324">0</text>
-                <text class="chart-label label-y" x="40" y="254">250</text>
-                <text class="chart-label label-y" x="40" y="184">500</text>
-                <text class="chart-label label-y" x="40" y="114">750</text>
-                <text class="chart-label label-y" x="40" y="44">1000</text>
+                @for(int i=0; i<5; i++) {
+                    <svg:text class="chart-label label-y" x="40" y="@(324 - (i*70))">@GetYLabel(i, maxAlugueis)</svg:text>
+                }
 
-                <text class="chart-label label-x" x="100" y="345">Jan</text>
-                <text class="chart-label label-x" x="230" y="345">Fev</text>
-                <text class="chart-label label-x" x="360" y="345">Mar</text>
-                <text class="chart-label label-x" x="490" y="345">Abr</text>
-                <text class="chart-label label-x" x="620" y="345">Mai</text>
-                <text class="chart-label label-x" x="750" y="345">Jun</text>
+                @for(int i=0; i<6; i++) {
+                    <svg:text class="chart-label label-x" x="@(100 + i*130)" y="345">@MonthLabels[i]</svg:text>
+                }
                 
-                <polyline class="chart-line-1" points="100,264 230,180 360,250 490,110 620,152 750,54"></polyline>
+                <polyline class="chart-line-1" points="@GetPolylinePoints(AlugueisValues, maxAlugueis)"></polyline>
                 
-                <text class="chart-data-value" x="100" y="249">200</text>
-                <text class="chart-data-value" x="230" y="165">500</text>
-                <text class="chart-data-value" x="360" y="235">250</text>
-                <text class="chart-data-value" x="490" y="95">750</text>
-                <text class="chart-data-value" x="620" y="137">600</text>
-                <text class="chart-data-value" x="750" y="39">950</text>
+                @for(int i=0; i<6; i++) {
+                    <svg:text class="chart-data-value" x="@(100 + i*130)" y="@(GetYCoord(AlugueisValues[i], maxAlugueis) - 15)">@AlugueisValues[i]</svg:text>
+                }
             </svg>
         </div>
     </div>
@@ -160,27 +155,19 @@
                 <line class="chart-axis" x1="50" x2="780" y1="320" y2="320"></line>
                 <line class="chart-axis" x1="50" x2="50" y1="40" y2="320"></line>
                 
-                <text class="chart-label label-y" x="40" y="324">0</text>
-                <text class="chart-label label-y" x="40" y="254">$1.2k</text>
-                <text class="chart-label label-y" x="40" y="184">$2.5k</text>
-                <text class="chart-label label-y" x="40" y="114">$3.7k</text>
-                <text class="chart-label label-y" x="40" y="44">$5.0k</text>
+                @for(int i=0; i<5; i++) {
+                    <svg:text class="chart-label label-y" x="40" y="@(324 - (i*70))">@GetYLabelDouble(i, maxLucro)</svg:text>
+                }
 
-                <text class="chart-label label-x" x="100" y="345">Jan</text>
-                <text class="chart-label label-x" x="230" y="345">Fev</text>
-                <text class="chart-label label-x" x="360" y="345">Mar</text>
-                <text class="chart-label label-x" x="490" y="345">Abr</text>
-                <text class="chart-label label-x" x="620" y="345">Mai</text>
-                <text class="chart-label label-x" x="750" y="345">Jun</text>
+                @for(int i=0; i<6; i++) {
+                    <svg:text class="chart-label label-x" x="@(100 + i*130)" y="345">@MonthLabels[i]</svg:text>
+                }
                 
-                <polyline class="chart-line-2" points="100,230 230,208 360,219 490,107 620,96 750,51"></polyline>
+                <polyline class="chart-line-2" points="@GetPolylinePointsDouble(LucroValues, maxLucro)"></polyline>
                 
-                <text class="chart-data-value" x="100" y="215">$1.6k</text>
-                <text class="chart-data-value" x="230" y="193">$2.0k</text>
-                <text class="chart-data-value" x="360" y="204">$1.8k</text>
-                <text class="chart-data-value" x="490" y="92">$3.8k</text>
-                <text class="chart-data-value" x="620" y="81">$4.0k</text>
-                <text class="chart-data-value" x="750" y="36">$4.8k</text>
+                @for(int i=0; i<6; i++) {
+                    <svg:text class="chart-data-value" x="@(100 + i*130)" y="@(GetYCoordDouble(LucroValues[i], maxLucro) - 15)">R$ @(LucroValues[i].ToString("0.00"))</svg:text>
+                }
             </svg>
         </div>
     </div>
@@ -214,7 +201,7 @@
                     <tr class="border-b-2 border-on-background hover:bg-surface-variant transition-colors group">
                         <td class="py-5 px-2 font-body-lg font-bold">@item.Title</td>
                         <td class="py-5 px-2 font-body-md text-on-surface-variant text-base">@item.Author</td>
-                        <td class="py-5 px-2 font-body-md text-on-surface-variant">@item.ISBN</td>
+                        <td class="py-5 px-2 font-body-md text-on-surface-variant">@item.Category</td>
                         <td class="py-5 px-2">
                             @if (item.Status == BookStatus.Available)
                             {
@@ -234,9 +221,6 @@
                                 <button @onclick="() => AbrirModal(item)" class="p-2 border-2 border-on-background bg-surface-lowest hover:bg-primary-container transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                     <span class="material-symbols-outlined text-xl">edit</span>
                                 </button>
-                                <button class="p-2 border-2 border-on-background bg-surface-lowest hover:bg-[#ffdad6] text-error transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                                    <span class="material-symbols-outlined text-xl">delete</span>
-                                </button>
                             </div>
                         </td>
                     </tr>
@@ -248,101 +232,91 @@
 
 @if (showModal)
 {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
-        <div class="relative w-full max-w-2xl bg-surface border-2 border-on-background shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 mt-auto mb-auto">
-            
-            <button @onclick="FecharModal" class="absolute top-4 right-4 p-2 border-2 border-on-background hover:bg-surface-variant transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <span class="material-symbols-outlined font-bold">close</span>
-            </button>
-
-            <header class="mb-8 border-b-2 border-on-background pb-6 flex items-center justify-between">
-                <div>
-                    <h1 class="font-headline-lg text-3xl font-black text-on-surface mb-2">
-                        @(isEditMode ? "Editar Livro" : "Adicionar Novo Livro")
-                    </h1>
-                </div>
-                <div class="border-2 border-on-background p-3 bg-surface shadow-[4px_4px_0px_0px_#ccc460]">
-                    <span class="material-symbols-outlined text-3xl text-on-surface">edit_document</span>
-                </div>
-            </header>
-
-            <div class="space-y-4">
-                <div class="space-y-2">
-                    <label class="block font-label-md font-bold uppercase tracking-wider">Título</label>
-                    <input type="text" @bind="editingBook.Title" class="w-full bg-white border-2 border-on-background p-3 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
-                </div>
-                <div class="space-y-2">
-                    <label class="block font-label-md font-bold uppercase tracking-wider">Autor</label>
-                    <input type="text" @bind="editingBook.Author" class="w-full bg-white border-2 border-on-background p-3 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="space-y-2">
-                        <label class="block font-label-md font-bold uppercase tracking-wider">ISBN</label>
-                        <input type="text" @bind="editingBook.ISBN" class="w-full bg-white border-2 border-on-background p-3 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
-                    </div>
-                    <div class="space-y-2">
-                        <label class="block font-label-md font-bold uppercase tracking-wider">Status</label>
-                        <select @bind="editingBook.Status" class="w-full bg-white border-2 border-on-background p-3 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all appearance-none">
-                            <option value="@BookStatus.Available">Disponível</option>
-                            <option value="@BookStatus.Loaned">Emprestado</option>
-                            <option value="@BookStatus.Overdue">Atrasado</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex justify-between items-center pt-8 mt-8 border-t-2 border-on-background">
-                @if (isEditMode)
-                {
-                    <button class="bg-[#ffdad6] text-[#93000a] border-2 border-on-background px-6 py-3 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
-                        <span class="material-symbols-outlined">delete</span> Apagar
-                    </button>
-                }
-                else { <div></div> }
-
-                <div class="flex gap-4">
-                    <button @onclick="FecharModal" class="bg-surface-variant border-2 border-on-background px-6 py-3 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Cancelar</button>
-                    <button @onclick="SalvarLivro" class="bg-primary-container border-2 border-on-background px-8 py-3 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex gap-2 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
-                        <span class="material-symbols-outlined">save</span> Salvar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+   <BookForm BookId="editingBook?.Id" OnClose="FecharModalEAtualizar" />
 }
 
-@code {
-    private bool showModal = false;
-    private bool isEditMode = false;
-    private Book editingBook = new();
 
-    private List<Book> Books = new()
+@code {
+    private BibliotecaMicroservice.Handlers.DashboardDataDto? DashboardData;
+    private bool showModal = false;
+    private Book editingBook = new();
+    private List<Book> Books = new();
+
+    // Variáveis para os gráficos
+    private string[] MonthLabels = new string[6];
+    private int[] AlugueisValues = new int[6];
+    private double[] LucroValues = new double[6];
+    private int maxAlugueis = 100;
+    private double maxLucro = 100.0;
+
+    protected override async Task OnInitializedAsync()
     {
-        new Book { Id = 1, Title = "Neuromancer", Author = "William Gibson", ISBN = "978-0441569595", Status = BookStatus.Available },
-        new Book { Id = 2, Title = "Snow Crash", Author = "Neal Stephenson", ISBN = "978-0553380958", Status = BookStatus.Loaned },
-        new Book { Id = 3, Title = "A Mão Esquerda da Escuridão", Author = "Ursula K. Le Guin", ISBN = "978-0441478125", Status = BookStatus.Available },
-        new Book { Id = 4, Title = "Dune", Author = "Frank Herbert", ISBN = "978-0441172719", Status = BookStatus.Overdue }
-    };
+        await CarregarDados();
+    }
+
+    private async Task CarregarDados()
+    {
+        DashboardData = await AnalyticsHandler.GetDashboardDataAsync();
+        
+        var apiBooks = await BookHandler.GetBooksAsync();
+        if (apiBooks != null)
+        {
+            Books = apiBooks.Select(b => new Book {
+                Id = b.id, Title = b.nome, Author = b.autor, Category = b.categoria,
+                Status = b.disponivel ? BookStatus.Available : BookStatus.Loaned
+            }).Take(4).ToList(); // Pegamos apenas os 4 primeiros para o dashboard não ficar gigante
+        }
+
+        var today = DateTime.Now;
+        
+        // Dados Mockados para manter a beleza brutalista + Mesclando com os dados reais do Mês Atual (Mês 6)
+        int[] baseMockAlugueis = { 200, 500, 250, 750, 600, 0 };
+        double[] baseMockLucros = { 1600.0, 2000.0, 1800.0, 3800.0, 4000.0, 0.0 };
+
+        for (int i = 5; i >= 0; i--)
+        {
+            var monthDate = today.AddMonths(i - 5);
+            MonthLabels[i] = monthDate.ToString("MMM").Substring(0, 3);
+            
+            int monthNum = monthDate.Month;
+            if (i == 5 && DashboardData != null) // Apenas o mês atual recebe dados reais da API
+            {
+                AlugueisValues[i] = DashboardData.alugueis_por_mes.GetValueOrDefault(monthNum.ToString(), 0);
+                LucroValues[i] = DashboardData.lucro_por_mes.GetValueOrDefault(monthNum.ToString(), 0.0);
+            }
+            else
+            {
+                AlugueisValues[i] = baseMockAlugueis[i];
+                LucroValues[i] = baseMockLucros[i];
+            }
+        }
+
+        maxAlugueis = AlugueisValues.Max() < 10 ? 10 : (int)Math.Ceiling(AlugueisValues.Max() / 4.0) * 4;
+        maxLucro = LucroValues.Max() < 10.0 ? 10.0 : Math.Ceiling(LucroValues.Max() / 4.0) * 4.0;
+    }
+
+    // -- Lógica SVG
+    private string GetYLabel(int index, int max) => ((max / 4) * index).ToString();
+    private string GetYLabelDouble(int index, double max) => "R$ " + ((max / 4) * index).ToString("0");
+
+    private int GetYCoord(int value, int max) => 320 - (int)((value / (double)max) * 280);
+    private int GetYCoordDouble(double value, double max) => 320 - (int)((value / max) * 280);
+
+    private string GetPolylinePoints(int[] values, int max)
+    {
+        int[] xs = { 100, 230, 360, 490, 620, 750 };
+        return string.Join(" ", values.Select((v, i) => $"{xs[i]},{GetYCoord(v, max)}"));
+    }
+
+    private string GetPolylinePointsDouble(double[] values, double max)
+    {
+        int[] xs = { 100, 230, 360, 490, 620, 750 };
+        return string.Join(" ", values.Select((v, i) => $"{xs[i]},{GetYCoordDouble(v, max)}"));
+    }
 
     private void AbrirModal(Book book)
     {
-        if (book == null)
-        {
-            isEditMode = false;
-            editingBook = new Book { Status = BookStatus.Available };
-        }
-        else
-        {
-            isEditMode = true;
-            editingBook = new Book 
-            { 
-                Id = book.Id, 
-                Title = book.Title, 
-                Author = book.Author, 
-                ISBN = book.ISBN, 
-                Status = book.Status 
-            };
-        }
+        editingBook = book ?? new Book();
         showModal = true;
     }
 
@@ -350,9 +324,27 @@
     {
         showModal = false;
     }
-
-    private void SalvarLivro()
+    
+    private async Task FecharModalEAtualizar()
     {
         showModal = false;
+        await CarregarDados();
+    }
+
+    private async Task ExportarCSV()
+    {
+        if (DashboardData == null) return;
+
+        var csv = "Mes,Alugueis,Lucro (R$)\n";
+        for (int i = 1; i <= 12; i++)
+        {
+            var alugueis = DashboardData.alugueis_por_mes.GetValueOrDefault(i.ToString(), 0);
+            var lucro = DashboardData.lucro_por_mes.GetValueOrDefault(i.ToString(), 0.0);
+            csv += $"{i},{alugueis},{lucro.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)}\n";
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+        var base64 = Convert.ToBase64String(bytes);
+        await JSRuntime.InvokeVoidAsync("eval", $"var a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'relatorio_biblioteca.csv'; document.body.appendChild(a); a.click(); document.body.removeChild(a);");
     }
 }

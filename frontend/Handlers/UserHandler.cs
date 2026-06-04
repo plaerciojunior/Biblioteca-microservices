@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using BibliotecaMicroservice.Models;
 using BibliotecaMicroservice.Requests.User;
 
@@ -12,6 +13,18 @@ namespace BibliotecaMicroservice.Handlers
         public UserHandler(HttpClient httpClient)
         {
             _httpClient = httpClient;
+        }
+
+        public async Task<List<UserModel>?> GetUsersAsync()
+        {
+            try { return await _httpClient.GetFromJsonAsync<List<UserModel>>("http://localhost:5000/users"); }
+            catch { return null; }
+        }
+
+        public async Task<bool> UpdateUserStatusAsync(int id, bool ativo)
+        {
+            var response = await _httpClient.PutAsJsonAsync($"http://localhost:5000/users/{id}", new { ativo = ativo });
+            return response.IsSuccessStatusCode;
         }
 
         public async Task<(bool Success, string? Token)> LoginAsync(LoginRequest request)

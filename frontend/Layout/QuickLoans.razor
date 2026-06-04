@@ -73,7 +73,7 @@
             ActiveLoans.Clear();
             foreach (var l in loans)
             {
-                if (l.status == "ativo")
+                if (l.status == "ativo" || l.status == "atrasado")
                 {
                     var book = await BookHandler.GetBookAsync(l.livro_id);
                     var loanDate = DateTime.TryParse(l.data_emprestimo, out var d) ? d : DateTime.Now;
@@ -81,7 +81,7 @@
                     {
                         Id = l.id,
                         BookTitle = book?.nome ?? "Desconhecido",
-                        IsOverdue = DateTime.Now > loanDate.AddDays(14)
+                        IsOverdue = l.status == "atrasado"
                     });
                 }
             }
@@ -91,13 +91,13 @@
     private async Task DevolverLivro(int loanId)
     {
         var result = await LoanHandler.ReturnLoanAsync(loanId);
-        if (result)
+        if (result.Success)
         {
-            SnackbarService.Show("Livro devolvido com sucesso!");
+            SnackbarService.Show(result.Message);
         }
         else
         {
-            SnackbarService.Show("Erro ao devolver livro.", true);
+            SnackbarService.Show(result.Message, true);
         }
     }
 }

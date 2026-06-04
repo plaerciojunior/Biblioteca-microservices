@@ -1,6 +1,8 @@
 @page "/admin/inventory"
 @layout AdminLayout
 @using BibliotecaMicroservice.Models
+@inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
+@inject BibliotecaMicroservice.Services.SnackbarService SnackbarService
 
 <div class="mb-8 mt-2 border-b-2 border-on-background pb-6">
     <h2 class="font-display-lg text-[40px] xl:text-[48px] text-on-background mb-2 font-black tracking-tight">Inventário</h2>
@@ -22,18 +24,18 @@
                 <tr class="border-b-2 border-on-background">
                     <th class="py-4 px-2 font-label-md font-bold uppercase tracking-wider text-xs">Título</th>
                     <th class="py-4 px-2 font-label-md font-bold uppercase tracking-wider text-xs">Autor</th>
-                    <th class="py-4 px-2 font-label-md font-bold uppercase tracking-wider text-xs">ISBN</th>
+                    <th class="py-4 px-2 font-label-md font-bold uppercase tracking-wider text-xs">Categoria</th>
                     <th class="py-4 px-2 font-label-md font-bold uppercase tracking-wider text-xs">Status</th>
                     <th class="py-4 px-2 font-label-md font-bold uppercase tracking-wider text-xs text-right">Ações</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Books)
+                @foreach (var item in DisplayedBooks)
                 {
                     <tr class="border-b-2 border-on-background hover:bg-surface-variant transition-colors group">
                         <td class="py-5 px-2 font-body-lg font-bold text-on-surface">@item.Title</td>
                         <td class="py-5 px-2 font-body-md text-on-surface-variant">@item.Author</td>
-                        <td class="py-5 px-2 font-body-md text-on-surface-variant">@item.ISBN</td>
+                        <td class="py-5 px-2 font-body-md text-on-surface-variant">@item.Category</td>
                         <td class="py-5 px-2">
                             @if (item.Status == BookStatus.Available)
                             {
@@ -53,7 +55,7 @@
                                 <button @onclick="() => AbrirModal(item)" class="p-2 border-2 border-on-background bg-surface-lowest hover:bg-primary-container transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                     <span class="material-symbols-outlined text-xl">edit</span>
                                 </button>
-                                <button class="p-2 border-2 border-on-background bg-surface-lowest hover:bg-[#ffdad6] text-error transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                                <button @onclick="() => ApagarLivro(item.Id)" class="p-2 border-2 border-on-background bg-surface-lowest hover:bg-[#ffdad6] text-error transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                                     <span class="material-symbols-outlined text-xl">delete</span>
                                 </button>
                             </div>
@@ -62,6 +64,32 @@
                 }
             </tbody>
         </table>
+    </div>
+
+    <!-- Paginação -->
+    <div class="flex justify-center items-center gap-4 mt-8">
+        <button @onclick="PreviousPage" disabled="@(currentPage == 1)" class="w-12 h-12 flex items-center justify-center border-4 border-on-background bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <span class="material-symbols-outlined font-black text-xl">chevron_left</span>
+        </button>
+
+        <div class="flex gap-3 font-label-md font-black text-lg">
+            @for (int i = 1; i <= TotalPages; i++)
+            {
+                int pageNum = i;
+                if (pageNum == currentPage)
+                {
+                    <button class="w-12 h-12 flex items-center justify-center border-4 border-on-background bg-[#d1b3ff] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[2px] translate-y-[2px]">@pageNum</button>
+                }
+                else
+                {
+                    <button @onclick="() => GoToPage(pageNum)" class="w-12 h-12 flex items-center justify-center border-4 border-on-background bg-white hover:bg-[#e7e0e7] transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">@pageNum</button>
+                }
+            }
+        </div>
+
+        <button @onclick="NextPage" disabled="@(currentPage == TotalPages)" class="w-12 h-12 flex items-center justify-center border-4 border-on-background bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <span class="material-symbols-outlined font-black text-xl">chevron_right</span>
+        </button>
     </div>
 </div>
 
@@ -72,25 +100,61 @@
 
 @code {
     private bool showModal = false;
-    private bool isEditMode = false;
-    private Book editingBook = new();
+    private Book? editingBook = null;
+    private List<Book> Books = new();
 
-    private List<Book> Books = new()
+    // --- LÓGICA DE PAGINAÇÃO ---
+    private int currentPage = 1;
+    private int itemsPerPage = 5;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)Books.Count / itemsPerPage));
+    private IEnumerable<Book> DisplayedBooks => Books.Skip((currentPage - 1) * itemsPerPage).Take(itemsPerPage);
+    
+    private void PreviousPage() { if (currentPage > 1) currentPage--; }
+    private void NextPage() { if (currentPage < TotalPages) currentPage++; }
+    private void GoToPage(int pageNum) { currentPage = pageNum; }
+
+    protected override async Task OnInitializedAsync()
     {
-        new Book { Id = 1, Title = "Neuromancer", Author = "William Gibson", ISBN = "978-0441569595", Status = BookStatus.Available },
-        new Book { Id = 2, Title = "Snow Crash", Author = "Neal Stephenson", ISBN = "978-0553380958", Status = BookStatus.Loaned },
-        new Book { Id = 3, Title = "A Mão Esquerda da Escuridão", Author = "Ursula K. Le Guin", ISBN = "978-0441478125", Status = BookStatus.Available },
-        new Book { Id = 4, Title = "Dune", Author = "Frank Herbert", ISBN = "978-0441172719", Status = BookStatus.Overdue }
-    };
+        await CarregarLivros();
+    }
 
-    private void AbrirModal(Book book)
+    private async Task CarregarLivros()
+    {
+        var apiBooks = await BookHandler.GetBooksAsync();
+        if (apiBooks != null)
+        {
+            Books = apiBooks.Select(b => new Book {
+                Id = b.id, Title = b.nome, Author = b.autor, Category = b.categoria,
+                Status = b.disponivel ? BookStatus.Available : BookStatus.Loaned
+            }).ToList();
+        }
+    }
+
+    private void AbrirModal(Book? book)
     {
         editingBook = book;
         showModal = true;
     }
 
-    private void FecharModal()
+    private async Task FecharModal()
     {
         showModal = false;
+        await CarregarLivros();
+    }
+
+    private async Task ApagarLivro(int id)
+    {
+        var success = await BookHandler.DeleteBookAsync(id);
+        if (success)
+        {
+            SnackbarService.Show("Livro deletado com sucesso!");
+            await CarregarLivros();
+            if (currentPage > TotalPages) currentPage = TotalPages; // Ajusta a página caso exclua o último item
+        }
+        else
+        {
+            SnackbarService.Show("Erro ao deletar livro.", true);
+        }
     }
 }

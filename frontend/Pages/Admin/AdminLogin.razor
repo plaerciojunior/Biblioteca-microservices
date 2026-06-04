@@ -1,6 +1,9 @@
 @page "/admin-login"
 @layout BibliotecaMicroservice.Layout.AuthLayout
+@using BibliotecaMicroservice.Requests.User
 @inject NavigationManager NavManager
+@inject BibliotecaMicroservice.Handlers.UserHandler UserHandler
+@inject BibliotecaMicroservice.Services.AuthService AuthService
 
 <div class="bg-surface-container bg-grid-pattern min-h-screen flex items-center justify-center p-4 md:p-8 antialiased text-on-background overflow-x-hidden">
     
@@ -24,8 +27,8 @@
             <!-- Login Form -->
             <div class="space-y-6">
                 <div class="space-y-2">
-                    <label class="block font-label-md font-bold text-on-surface-variant uppercase tracking-wider text-sm">Usuário Admin</label>
-                    <input type="text" @bind="LoginModel.Username" class="w-full bg-white border-4 border-on-background px-4 py-3 font-body-lg font-bold text-on-background placeholder:text-outline focus:outline-none shadow-[4px_4px_0px_0px_#1d1b1f] transition-all duration-200 focus:shadow-[2px_2px_0px_0px_#1d1b1f] focus:translate-x-[2px] focus:translate-y-[2px]" placeholder="admin" />
+                    <label class="block font-label-md font-bold text-on-surface-variant uppercase tracking-wider text-sm">Email ou Usuário Admin</label>
+                    <input type="text" @bind="LoginModel.Email" class="w-full bg-white border-4 border-on-background px-4 py-3 font-body-lg font-bold text-on-background placeholder:text-outline focus:outline-none shadow-[4px_4px_0px_0px_#1d1b1f] transition-all duration-200 focus:shadow-[2px_2px_0px_0px_#1d1b1f] focus:translate-x-[2px] focus:translate-y-[2px]" placeholder="admin" />
                 </div>
                 
                 <div class="space-y-2">
@@ -60,19 +63,24 @@
 </div>
 
 @code {
-    private LoginRequest LoginModel = new();
+    private LoginRequest LoginModel = new LoginRequest();
     private string ErrorMessage = "";
 
-    private void FazerLogin() {
-        if (LoginModel.Username == "admin" && LoginModel.Password == "admin") {
-            NavManager.NavigateTo("/admin/dashboard");
+    private async Task FazerLogin() {
+        ErrorMessage = "";
+        var result = await UserHandler.LoginAsync(LoginModel);
+        
+        if (result.Success && !string.IsNullOrEmpty(result.Token)) {
+            await AuthService.LoginAsync(result.Token);
+            
+            if (AuthService.CurrentUserRole == "admin") {
+                NavManager.NavigateTo("/admin/dashboard");
+            } else {
+                await AuthService.LogoutAsync(); // Se for usuário comum, desloga na hora!
+                ErrorMessage = "Acesso negado. Esta conta não possui privilégios de administrador.";
+            }
         } else {
-            ErrorMessage = "Credenciais inválidas. Tente admin / admin.";
+            ErrorMessage = "Credenciais inválidas. Verifique seu usuário e senha.";
         }
-    }
-
-    public class LoginRequest {
-        public string Username { get; set; } = "";
-        public string Password { get; set; } = "";
     }
 }

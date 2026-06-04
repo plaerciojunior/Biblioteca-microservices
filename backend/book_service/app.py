@@ -1,8 +1,14 @@
+import os
 from flask import Flask, jsonify, request, send_from_directory
 from pony.orm import db_session, select, commit
 from bd.models import db, Livro
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+
+# Caminho absoluto para a pasta bd
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BD_DIR = os.path.join(BASE_DIR, 'bd')
 
 #Rota para criação do livro
 @app.route('/books', methods=['POST'])
@@ -76,9 +82,29 @@ def get_book(id):
 # ROTA PARA SERVIR O ARQUIVO PDF
 @app.route('/books/pdf/<filename>', methods=['GET'])
 def get_pdf(filename):
-    # Serve o arquivo a partir da pasta 'bd' (onde o dom_casmurro.pdf foi salvo)
-    return send_from_directory('bd', filename)
+    # Serve o arquivo a partir da pasta 'bd' absoluta
+    return send_from_directory(BD_DIR, filename)
 
+# ROTA PARA UPLOAD DE PDF
+@app.route('/books/<int:id>/pdf', methods=['POST'])
+@db_session
+def upload_pdf(id):
+    livro = Livro.get(id=id)
+    if not livro:
+        return jsonify({"Status": "Livro não encontrado"}), 404
+        
+    if 'file' not in request.files:
+        return jsonify({"Status": "Nenhum arquivo enviado"}), 400
+        
+    file = request.files['file']
+    if file and file.filename.endswith('.pdf'):
+        filename = secure_filename(f"livro_{id}_{file.filename}")
+        file.save(os.path.join(BD_DIR, filename))
+        livro.pdf_url = filename
+        commit()
+        return jsonify({"Status": "PDF atualizado com sucesso", "pdf_url": filename}), 200
+        
+    return jsonify({"Status": "Arquivo inválido, envie um .pdf"}), 400
 
 # UPDATE BOOK
 @app.route('/books/<int:id>', methods=['PUT'])

@@ -1,5 +1,4 @@
-version: '3.8'
-
+name: bibliotecamicroservice
 services:
   api_gateway:
     build:
@@ -10,22 +9,30 @@ services:
       - USER_SERVICE_URL=http://user_service:5001
       - BOOK_SERVICE_URL=http://book_service:5002
       - LOAN_SERVICE_URL=http://loan_service:5003
+      - ANALYTICS_SERVICE_URL=http://analytics_service:5004
+      - PAYMENT_SERVICE_URL=http://payment_service:5005
     depends_on:
       - user_service
       - book_service
       - loan_service
+      - analytics_service
+      - payment_service
 
   user_service:
     build:
       context: ./backend/user_service
     ports:
       - "5001:5001"
+    volumes:
+      - ./backend/user_service/bd:/app/bd
 
   book_service:
     build:
       context: ./backend/book_service
     ports:
       - "5002:5002"
+    volumes:
+      - ./backend/book_service/bd:/app/bd
 
   loan_service:
     build:
@@ -38,6 +45,25 @@ services:
     depends_on:
       - user_service
       - book_service
+    volumes:
+      - ./backend/loan_service/bd:/app/bd
+      
+  analytics_service:
+    build:
+      context: ./backend/analytics_service
+    ports:
+      - "5004:5004"
+    environment:
+      - USER_SERVICE_URL=http://user_service:5001
+      - LOAN_SERVICE_URL=http://loan_service:5003
+      
+  payment_service:
+    build:
+      context: ./backend/payment_service
+    ports:
+      - "5005:5005"
+    volumes:
+      - ./backend/payment_service/bd:/app/bd
 
   frontend:
     build:

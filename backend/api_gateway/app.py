@@ -10,12 +10,19 @@ CORS(app)
 USER_SERVICE = os.environ.get('USER_SERVICE_URL', 'http://localhost:5001')
 BOOK_SERVICE = os.environ.get('BOOK_SERVICE_URL', 'http://localhost:5002')
 LOAN_SERVICE = os.environ.get('LOAN_SERVICE_URL', 'http://localhost:5003')
-#RECOMMENDATION_SERVICE = 'http://localhost:5004'
+ANALYTICS_SERVICE = os.environ.get('ANALYTICS_SERVICE_URL', 'http://localhost:5004')
+PAYMENT_SERVICE = os.environ.get('PAYMENT_SERVICE_URL', 'http://localhost:5005')
 
 #Rota Raiz
 @app.route('/', methods=['GET'])
 def index():
-    return jsonify({"message": "API Gateway está rodando! As rotas disponíveis são /users, /books e /loans."}), 200
+    return jsonify({"message": "API Gateway está rodando! As rotas disponíveis são /users, /books, /loans, /analytics e /payments."}), 200
+
+#Rota Analytics
+@app.route('/analytics/dashboard', methods=['GET'])
+def get_analytics():
+    response = requests.get(f'{ANALYTICS_SERVICE}/analytics/dashboard')
+    return jsonify(response.json()), response.status_code
 
 #ROTAS USUÁRIO
 
@@ -69,6 +76,15 @@ def get_livro_pdf(filename):
         return Response(response.content, mimetype=response.headers.get('content-type', 'application/pdf'))
     return jsonify({"Status": "PDF não encontrado"}), response.status_code
 
+#Upload de PDF
+@app.route('/books/<int:id>/pdf', methods=['POST'])
+def upload_livro_pdf(id):
+    if 'file' not in request.files:
+        return jsonify({"Status": "Nenhum arquivo enviado"}), 400
+    file = request.files['file']
+    files = {'file': (file.filename, file.stream, file.mimetype)}
+    response = requests.post(f'{BOOK_SERVICE}/books/{id}/pdf', files=files)
+    return jsonify(response.json()), response.status_code
 
 #Usuários por ID
 @app.route('/users/<int:id>', methods=['GET'])
@@ -204,6 +220,14 @@ def renovar_emprestimo(id):
 
     return jsonify(response.json()), response.status_code
 
+#Limpar multas do usuário
+@app.route('/loans/user/<int:id>/clear_fines', methods=['PUT'])
+def limpar_multas_usuario(id):
+    response = requests.put(
+        f'{LOAN_SERVICE}/loans/user/{id}/clear_fines'
+    )
+    return jsonify(response.json()), response.status_code
+
 #Todos os empréstimos de um pelo id do usuário
 @app.route('/loans/user/<int:id>', methods=['GET'])
 def get_emprestimos_usuario(id):
@@ -222,6 +246,12 @@ def listar_emprestimos_ativos():
         f'{LOAN_SERVICE}/loans/active'
     )
 
+    return jsonify(response.json()), response.status_code
+
+#Rota de Pagamentos
+@app.route('/payments/pay', methods=['POST'])
+def processar_pagamento():
+    response = requests.post(f'{PAYMENT_SERVICE}/payments/pay', json=request.json)
     return jsonify(response.json()), response.status_code
 
 if __name__ == "__main__":

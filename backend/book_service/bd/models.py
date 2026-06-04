@@ -1,5 +1,6 @@
 from pony.orm import *
 from datetime import datetime, timezone
+import os
 
 db = Database() #Criando o banco de dados
 
@@ -25,7 +26,8 @@ class Livro(db.Entity):
 
 
 #Conectando com o banco de dados 
-db.bind(provider='sqlite', filename='database.sqlite', create_db=True)
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'database.sqlite')
+db.bind(provider='sqlite', filename=db_path, create_db=True)
 
 #Mapeando/Criando tabela livro no banco de dados
 db.generate_mapping(create_tables=True)

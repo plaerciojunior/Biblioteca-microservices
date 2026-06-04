@@ -118,10 +118,6 @@
                 }
             </div>
             
-            <!-- Botão Carregar Mais -->
-            <button class="mt-4 bg-white text-on-background border-4 border-on-background px-8 py-4 font-headline-md text-xl font-black uppercase shadow-[6px_6px_0px_0px_#1d1b1f] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all self-center">
-                Carregar Mais (5)
-            </button>
         </section>
 
     </div>
@@ -184,7 +180,7 @@
                 var book = await BookHandler.GetBookAsync(l.livro_id);
                 var loanDate = DateTime.TryParse(l.data_emprestimo, out var d) ? d : DateTime.Now;
                 var dueDate = loanDate.AddDays(14);
-                var isOverdue = l.status == "ativo" && DateTime.Now > dueDate;
+                var isOverdue = l.status == "atrasado";
 
                 var model = new Loan
                 {
@@ -199,7 +195,7 @@
                     ReturnedDate = DateTime.TryParse(l.data_devolucao, out var rd) ? rd : null
                 };
                 
-                if (l.status == "ativo")
+                if (l.status == "ativo" || l.status == "atrasado")
                 {
                     MyActiveLoans.Add(model);
                 }
@@ -229,26 +225,26 @@
     private async Task DevolverLivroAsync(Loan loan)
     {
         var result = await LoanHandler.ReturnLoanAsync(loan.Id);
-        if (result)
+        if (result.Success)
         {
-            SnackbarService.Show("Livro devolvido com sucesso!");
+            SnackbarService.Show(result.Message);
         }
         else
         {
-            SnackbarService.Show("Erro ao devolver livro.", true);
+            SnackbarService.Show(result.Message, true);
         }
     }
 
     private async Task RenovarLivroAsync(Loan loan)
     {
         var result = await LoanHandler.RenewLoanAsync(loan.Id);
-        if (result)
+        if (result.Success)
         {
-            SnackbarService.Show("Livro renovado com sucesso!");
+            SnackbarService.Show(result.Message);
         }
         else
         {
-            SnackbarService.Show("Erro ao renovar livro.", true);
+            SnackbarService.Show(result.Message, true);
         }
     }
 

@@ -31,6 +31,8 @@ Microsserviço responsável pelo gerenciamento do catálogo de livros da bibliot
 * Consulta por ID
 * Listagem de livros
 * Controle de disponibilidade para empréstimos
+* Servir arquivos PDF para leitura online
+* Receber upload de novos arquivos PDF
 
 ## Endpoints
 
@@ -39,6 +41,8 @@ Microsserviço responsável pelo gerenciamento do catálogo de livros da bibliot
 * GET /books/{id}
 * PUT /books/{id}
 * DELETE /books/{id}
+* GET /books/pdf/{filename}
+* POST /books/{id}/pdf
 
 ## Execução
 

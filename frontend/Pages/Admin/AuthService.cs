@@ -12,6 +12,7 @@ namespace BibliotecaMicroservice.Services
         public event Action? OnAuthStateChanged;
         public int? CurrentUserId { get; private set; }
         public string? CurrentUserName { get; private set; }
+        public string? CurrentUserRole { get; private set; }
 
         public AuthService(IJSRuntime jsRuntime)
         {
@@ -39,6 +40,7 @@ namespace BibliotecaMicroservice.Services
             await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", "jwt_token");
             CurrentUserId = null;
             CurrentUserName = null;
+            CurrentUserRole = null;
             OnAuthStateChanged?.Invoke();
         }
 
@@ -58,11 +60,16 @@ namespace BibliotecaMicroservice.Services
                 {
                     CurrentUserName = emailElement.GetString();
                 }
+                if (claims != null && claims.TryGetValue("tipo", out var tipoElement))
+                {
+                    CurrentUserRole = tipoElement.GetString();
+                }
             }
             catch
             {
                 CurrentUserId = null;
                 CurrentUserName = null;
+                CurrentUserRole = null;
             }
         }
 

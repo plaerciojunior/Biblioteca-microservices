@@ -35,7 +35,8 @@ def login_user():
                 "id": usuario.id,
                 "nome": usuario.nome,
                 "email": usuario.email,
-                "tipo": usuario.tipo
+                "tipo": usuario.tipo,
+                "ativo": usuario.ativo
             }
         }), 200
     else:
@@ -55,16 +56,17 @@ def create_user():
     nome = data['nome']
     senha = data['senha']
     tipo = data['tipo']
+    ativo = data.get('ativo', True)
 
     usuario_existente = Usuario.get(email=email)
     if usuario_existente:
         return jsonify({"Status": "Email já cadastrado"}),409
     else:
         senha_hash = generate_password_hash(senha)
-        usuario = Usuario(nome = nome, email = email, senha = senha_hash, tipo = tipo)
+        usuario = Usuario(nome = nome, email = email, senha = senha_hash, tipo = tipo, ativo=ativo)
         commit()
         return jsonify({"Status": "Usuário criado",
-                        "id": usuario.id, "email":usuario.email, "tipo": usuario.tipo}),201
+                        "id": usuario.id, "email":usuario.email, "tipo": usuario.tipo, "ativo": usuario.ativo}),201
 
 # GET TODOS OS USUÁRIOS
 @app.route('/users', methods=['GET'])
@@ -80,7 +82,8 @@ def get_users():
             "id": usuario.id,
             "nome": usuario.nome,
             "email": usuario.email,
-            "tipo": usuario.tipo
+            "tipo": usuario.tipo,
+            "ativo": usuario.ativo
         })
 
     return jsonify(lista_usuarios),200
@@ -101,7 +104,8 @@ def get_user(id):
         "id": usuario.id,
         "nome": usuario.nome,
         "email": usuario.email,
-        "tipo": usuario.tipo
+        "tipo": usuario.tipo,
+        "ativo": usuario.ativo
     }),200
 
 #ATUALIZAR DADOS DO USUÁRIO
@@ -128,6 +132,9 @@ def update_user(id):
 
     if 'senha' in data:
         usuario.senha = generate_password_hash(data['senha'])
+        
+    if 'ativo' in data:
+        usuario.ativo = data['ativo']
 
     commit()
 
@@ -136,7 +143,8 @@ def update_user(id):
         "id": usuario.id,
         "nome": usuario.nome,
         "email": usuario.email,
-        "tipo": usuario.tipo
+        "tipo": usuario.tipo,
+        "ativo": usuario.ativo
     }),200
 
 #Apagar usuário
@@ -162,11 +170,11 @@ def seed_users():
     from pony.orm import db_session
     with db_session:
         if Usuario.select().count() == 0:
-            Usuario(nome="admin", email="admin", senha=generate_password_hash("123456"), tipo="admin")
-            Usuario(nome="user", email="user", senha=generate_password_hash("123456"), tipo="usuario")
-            Usuario(nome="Alice Vance", email="alice@example.com", senha=generate_password_hash("senhaalice"), tipo="usuario")
-            Usuario(nome="Case Henry", email="case@example.com", senha=generate_password_hash("senhacase"), tipo="usuario")
-            Usuario(nome="Fulano Detal", email="fulano@example.com", senha=generate_password_hash("senhafulano"), tipo="usuario")
+            Usuario(nome="admin", email="admin", senha=generate_password_hash("123456"), tipo="admin", ativo=True)
+            Usuario(nome="user", email="user", senha=generate_password_hash("123456"), tipo="usuario", ativo=True)
+            Usuario(nome="Alice Vance", email="alice@example.com", senha=generate_password_hash("senhaalice"), tipo="usuario", ativo=True)
+            Usuario(nome="Case Henry", email="case@example.com", senha=generate_password_hash("senhacase"), tipo="usuario", ativo=False) # Usuário bloqueado
+            Usuario(nome="Fulano Detal", email="fulano@example.com", senha=generate_password_hash("senhafulano"), tipo="usuario", ativo=False)
             commit()
             print("Usuários mockados inseridos com sucesso no SQLite!")
 

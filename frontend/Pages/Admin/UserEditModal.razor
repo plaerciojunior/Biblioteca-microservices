@@ -1,4 +1,7 @@
 @using BibliotecaMicroservice.Models
+@inject BibliotecaMicroservice.Handlers.UserHandler UserHandler
+@inject BibliotecaMicroservice.Handlers.LoanHandler LoanHandler
+@inject BibliotecaMicroservice.Services.SnackbarService SnackbarService
 
 <div class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-10 overflow-y-auto">
     <div class="bg-[#FFF8ED] w-full max-w-4xl border-4 border-on-background shadow-[12px_12px_0px_0px_#1d1b1f] relative my-auto">
@@ -33,10 +36,22 @@
                             <span class="material-symbols-outlined text-[#93000a] font-black">warning</span>
                             <h3 class="font-headline-md text-2xl font-black text-[#93000a] uppercase">Zona de Perigo</h3>
                         </div>
-                        <p class="font-body-md font-bold text-[#93000a]">Revogar acesso à biblioteca imediatamente. O usuário será bloqueado.</p>
-                        <button @onclick="BloquearUsuario" class="w-full bg-[#93000a] text-white font-label-md font-black uppercase border-4 border-on-background py-3 px-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
-                            @(User.IsActive ? "BLOQUEAR USUÁRIO" : "DESBLOQUEAR USUÁRIO")
-                        </button>
+                        
+                        @if (!showBlockConfirmation)
+                        {
+                            <p class="font-body-md font-bold text-[#93000a]">Revogar acesso à biblioteca imediatamente. O usuário será bloqueado.</p>
+                            <button @onclick="() => showBlockConfirmation = true" class="w-full bg-[#93000a] text-white font-label-md font-black uppercase border-4 border-on-background py-3 px-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+                                @(User.IsActive ? "BLOQUEAR USUÁRIO" : "DESBLOQUEAR USUÁRIO")
+                            </button>
+                        }
+                        else
+                        {
+                            <p class="font-body-md font-bold text-[#93000a] uppercase tracking-wider text-sm">Tem certeza que deseja @(User.IsActive ? "bloquear" : "desbloquear") o usuário <br/><strong>@User.Name</strong>?</p>
+                            <div class="flex gap-4 mt-2">
+                                <button @onclick="BloquearUsuario" class="flex-1 bg-[#93000a] text-white font-label-md font-black uppercase border-4 border-on-background py-3 px-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Sim</button>
+                                <button @onclick="() => showBlockConfirmation = false" class="flex-1 bg-white text-[#93000a] font-label-md font-black uppercase border-4 border-on-background py-3 px-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Cancelar</button>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -90,15 +105,37 @@
     [Parameter] public ReaderUser User { get; set; } = default!;
     [Parameter] public EventCallback OnClose { get; set; }
 
+    private bool showBlockConfirmation = false;
+
     private Task Fechar() => OnClose.InvokeAsync();
 
-    private void RevogarEmprestimo(Loan loan)
+    private async Task RevogarEmprestimo(Loan loan)
     {
-        User.ActiveLoans.Remove(loan);
+        var success = await LoanHandler.ReturnLoanAsync(loan.Id);
+        if (success.Success)
+        {
+            User.ActiveLoans.Remove(loan);
+            SnackbarService.Show("Empréstimo revogado com sucesso!");
+        }
+        else
+        {
+            SnackbarService.Show(success.Message, true);
+        }
     }
 
-    private void BloquearUsuario()
+    private async Task BloquearUsuario()
     {
-        User.IsActive = !User.IsActive; // Altera de Ativo para Bloqueado (e vice-versa)
+        var novoStatus = !User.IsActive;
+        var success = await UserHandler.UpdateUserStatusAsync(User.Id, novoStatus);
+        if (success)
+        {
+            User.IsActive = novoStatus;
+            showBlockConfirmation = false;
+            SnackbarService.Show(novoStatus ? "Usuário desbloqueado com sucesso!" : "Usuário bloqueado com sucesso!");
+        }
+        else
+        {
+            SnackbarService.Show("Erro ao alterar o status do usuário.", true);
+        }
     }
 }

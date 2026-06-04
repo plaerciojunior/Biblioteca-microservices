@@ -1,4 +1,6 @@
 @inject BibliotecaMicroservice.Services.SnackbarService SnackbarService
+@inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
+@using Microsoft.AspNetCore.Components.Forms
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
     
@@ -32,16 +34,31 @@
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="space-y-2">
-                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm">ISBN</label>
-                    <input type="text" @bind="Book.ISBN" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
+                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Categoria</label>
+                    <input type="text" @bind="Book.Category" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" placeholder="Ex: Sci-Fi" />
                 </div>
                 <div class="space-y-2">
-                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Status</label>
-                    <select @bind="Book.Status" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all appearance-none">
-                        <option value="Available">Disponível</option>
-                        <option value="Loaned">Emprestado</option>
-                        <option value="Overdue">Atrasado</option>
-                    </select>
+                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Ano de Publicação</label>
+                    <input type="number" @bind="Book.PublishYear" class="w-full bg-white border-2 border-on-background p-4 font-body-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all" />
+                </div>
+            </div>
+            
+            <div class="border-t-2 border-on-background pt-6 border-dashed grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div class="space-y-2">
+                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Disponibilidade</label>
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <input type="checkbox" @bind="Book.IsAvailable" class="w-6 h-6 border-2 border-on-background accent-[#ccc460]" />
+                        <span class="font-body-lg font-bold">Livro disponível para novos empréstimos</span>
+                    </label>
+                </div>
+                <div class="space-y-2 bg-[#d1b3ff]/20 p-4 border-2 border-on-background">
+                    <label class="block font-label-md font-bold uppercase tracking-wider text-sm flex items-center gap-2">
+                        <span class="material-symbols-outlined">upload_file</span> Upload de PDF (Opcional)
+                    </label>
+                    <InputFile OnChange="HandleFileSelected" accept=".pdf" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:border-2 file:border-on-background file:text-sm file:font-bold file:bg-surface-lowest file:uppercase hover:file:bg-[#d1b3ff] file:transition-colors cursor-pointer" />
+                    @if (!string.IsNullOrEmpty(currentPdfName)) {
+                        <p class="text-xs font-bold text-[#864e5a] mt-2">Arquivo atual/selecionado: @currentPdfName</p>
+                    }
                 </div>
             </div>
         </div>
@@ -74,13 +91,26 @@
 
     private bool IsEditMode => BookId.HasValue;
     private BookFormModel Book = new();
+    private IBrowserFile? selectedPdf;
+    private string currentPdfName = "";
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (IsEditMode)
         {
-            Book = new BookFormModel { Title = "Neuromancer", Author = "William Gibson", ISBN = "978-0441569595", Status = "Available" };
+            var b = await BookHandler.GetBookAsync(BookId.GetValueOrDefault());
+            if (b != null)
+            {
+                Book = new BookFormModel { Title = b.nome, Author = b.autor, Category = b.categoria, PublishYear = b.ano_publicacao, IsAvailable = b.disponivel };
+                currentPdfName = string.IsNullOrEmpty(b.pdf_url) ? "" : b.pdf_url;
+            }
         }
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        selectedPdf = e.File;
+        currentPdfName = selectedPdf.Name;
     }
 
     private Task Fechar()
@@ -90,15 +120,41 @@
 
     private async Task SalvarLivro()
     {
-        SnackbarService.Show("Livro adicionado com sucesso!");
-        await Fechar();
+        var dto = new BibliotecaMicroservice.Handlers.BookDto 
+        {
+            nome = Book.Title, autor = Book.Author, categoria = Book.Category, 
+            ano_publicacao = Book.PublishYear, disponivel = Book.IsAvailable
+        };
+        
+        var savedBook = IsEditMode ? await BookHandler.UpdateBookAsync(BookId.GetValueOrDefault(), dto) : await BookHandler.CreateBookAsync(dto);
+
+        if (savedBook != null)
+        {
+            if (selectedPdf != null)
+            {
+                using var content = new MultipartFormDataContent();
+                // Aceitando arquivos de até 20MB
+                var fileContent = new StreamContent(selectedPdf.OpenReadStream(maxAllowedSize: 1024 * 1024 * 20));
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(selectedPdf.ContentType);
+                content.Add(fileContent, "file", selectedPdf.Name);
+                await BookHandler.UploadPdfAsync(savedBook.id, content);
+            }
+            
+            SnackbarService.Show(IsEditMode ? "Livro atualizado com sucesso!" : "Livro adicionado com sucesso!");
+            await Fechar();
+        }
+        else
+        {
+            SnackbarService.Show("Erro ao salvar dados do livro.", true);
+        }
     }
 
     public class BookFormModel
     {
         public string Title { get; set; } = "";
         public string Author { get; set; } = "";
-        public string ISBN { get; set; } = "";
-        public string Status { get; set; } = "Available";
+        public string Category { get; set; } = "";
+        public int PublishYear { get; set; } = DateTime.Now.Year;
+        public bool IsAvailable { get; set; } = true;
     }
 }
