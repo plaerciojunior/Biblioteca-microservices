@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from pony.orm import db_session, select, commit
 from bd.models import db, Livro
 
@@ -44,7 +44,8 @@ def get_books():
             "autor": livro.autor,
             "categoria": livro.categoria,
             "ano_publicacao": livro.ano_publicacao,
-            "disponivel": livro.disponivel
+            "disponivel": livro.disponivel,
+            "pdf_url": getattr(livro, 'pdf_url', '')
         })
 
     return jsonify(lista_livros),200
@@ -67,8 +68,17 @@ def get_book(id):
             "autor": livro.autor,
             "categoria": livro.categoria,
             "ano_publicacao": livro.ano_publicacao,
-            "disponivel": livro.disponivel
+            "disponivel": livro.disponivel,
+            "pdf_url": getattr(livro, 'pdf_url', '')
         }),200
+
+
+# ROTA PARA SERVIR O ARQUIVO PDF
+@app.route('/books/pdf/<filename>', methods=['GET'])
+def get_pdf(filename):
+    # Serve o arquivo a partir da pasta 'bd' (onde o dom_casmurro.pdf foi salvo)
+    return send_from_directory('bd', filename)
+
 
 # UPDATE BOOK
 @app.route('/books/<int:id>', methods=['PUT'])
@@ -99,6 +109,9 @@ def update_book(id):
     if 'disponivel' in data:
         livro.disponivel = data['disponivel']
 
+    if 'pdf_url' in data:
+        livro.pdf_url = data['pdf_url']
+
     commit()
 
     return jsonify({
@@ -107,7 +120,8 @@ def update_book(id):
             "autor": livro.autor,
             "categoria": livro.categoria,
             "ano_publicacao": livro.ano_publicacao,
-            "disponivel": livro.disponivel
+            "disponivel": livro.disponivel,
+            "pdf_url": getattr(livro, 'pdf_url', '')
         }),200
 
 # DELETE BOOK
@@ -131,7 +145,21 @@ def delete_book(id):
     }),200
 
 
+def seed_books():
+    from pony.orm import db_session
+    with db_session:
+        if Livro.select().count() == 0:
+            Livro(nome="neuromancer", autor="William Gibson", categoria="Cyberpunk / Sci-Fi", ano_publicacao=1984, disponivel=True, pdf_url="")
+            Livro(nome="snow crash", autor="Neal Stephenson", categoria="Sci-Fi", ano_publicacao=1992, disponivel=True, pdf_url="")
+            Livro(nome="a mão esquerda da escuridão", autor="Ursula K. Le Guin", categoria="Sci-Fi", ano_publicacao=1969, disponivel=True, pdf_url="")
+            Livro(nome="dune", autor="Frank Herbert", categoria="Epic Fantasy", ano_publicacao=1965, disponivel=True, pdf_url="")
+            Livro(nome="foundation", autor="Isaac Asimov", categoria="Classic Sci-Fi", ano_publicacao=1951, disponivel=True, pdf_url="")
+            Livro(nome="dom casmurro", autor="Machado de Assis", categoria="Literatura Brasileira", ano_publicacao=1899, disponivel=True, pdf_url="dom_casmurro.pdf")
+            commit()
+            print("Livros mockados inseridos com sucesso no SQLite!")
+
 if __name__ == '__main__':
+    seed_books()
     app.run(host="0.0.0.0", port=5002)
 
 

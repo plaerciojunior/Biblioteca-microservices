@@ -10,24 +10,14 @@
         </div>
     </div>
 
-    <button class="w-full bg-primary-container border-2 border-on-background py-3 px-4 font-label-md font-bold neo-shadow hover:bg-secondary-container hover:neo-shadow-hover transition-all text-on-surface mb-8 flex justify-center items-center gap-2">
-        <span class="material-symbols-outlined">add</span> Novo Empréstimo
-    </button>
+    <NavLink class="w-full bg-primary-container border-2 border-on-background py-3 px-4 font-label-md font-bold neo-shadow hover:bg-secondary-container hover:neo-shadow-hover transition-all text-on-surface mb-8 flex justify-center items-center gap-2" href="my-loans">
+        <span class="material-symbols-outlined">menu_book</span> Meus Empréstimos
+    </NavLink>
 
     <nav class="flex flex-col gap-2 flex-1 overflow-y-auto">
-        <NavLink class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 active:scale-95 border-2 border-transparent" href="" Match="NavLinkMatch.All">
+        <NavLink class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 active:scale-95 border-2 border-transparent" href="catalog" Match="NavLinkMatch.All">
             <span class="material-symbols-outlined">home</span>
             <span class="font-label-md">Início</span>
-        </NavLink>
-        
-        <NavLink class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 active:scale-95 border-2 border-transparent" href="my-loans">
-            <span class="material-symbols-outlined">menu_book</span>
-            <span class="font-label-md">Meus Empréstimos</span>
-        </NavLink>
-
-        <NavLink class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 active:scale-95 border-2 border-transparent" href="history">
-            <span class="material-symbols-outlined">history</span>
-            <span class="font-label-md">Histórico</span>
         </NavLink>
     </nav>
 

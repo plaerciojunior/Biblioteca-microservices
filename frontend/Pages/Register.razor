@@ -1,6 +1,9 @@
 @page "/register"
 @layout BibliotecaMicroservice.Layout.AuthLayout
+@using BibliotecaMicroservice.Requests.User
+@using BibliotecaMicroservice.Handlers
 @inject NavigationManager NavManager
+@inject UserHandler UserHandler
 
 <div class="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 font-body-md overflow-x-hidden">
     <!-- Fundo Desfocado -->
@@ -19,17 +22,19 @@
         <!-- Formulário em Grid -->
         <div class="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             
+            @if (showError)
+            {
+                <div class="md:col-span-2 bg-red-100 border-4 border-red-500 p-4 font-bold text-red-700">
+                    Falha ao criar conta. Tente novamente ou verifique se o email já existe.
+                </div>
+            }
+
             <div class="space-y-2 md:col-span-2">
                 <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Nome Completo</label>
                 <input type="text" @bind="RegisterModel.FullName" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="Ex: Antonieta Silva" />
             </div>
 
-            <div class="space-y-2">
-                <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Usuário</label>
-                <input type="text" @bind="RegisterModel.Username" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="tonisilva" />
-            </div>
-            
-            <div class="space-y-2">
+            <div class="space-y-2 md:col-span-2">
                 <label class="block font-label-md font-bold uppercase tracking-wider text-sm">Email</label>
                 <input type="email" @bind="RegisterModel.Email" class="w-full bg-white border-4 border-on-background p-4 font-bold text-lg shadow-[6px_6px_0px_0px_#1d1b1f] focus:outline-none focus:translate-x-[2px] focus:translate-y-[2px] focus:shadow-[4px_4px_0px_0px_#1d1b1f] transition-all" placeholder="toni@exemplo.com" />
             </div>
@@ -56,13 +61,19 @@
 
 @code {
     private RegisterRequest RegisterModel = new();
+    private bool showError = false;
 
-    private void FazerCadastro() => NavManager.NavigateTo("/login");
-
-    public class RegisterRequest {
-        public string FullName { get; set; } = "";
-        public string Username { get; set; } = "";
-        public string Email { get; set; } = "";
-        public string Password { get; set; } = "";
+    private async Task FazerCadastro()
+    {
+        showError = false;
+        var result = await UserHandler.RegisterAsync(RegisterModel);
+        if (result)
+        {
+            NavManager.NavigateTo("/login");
+        }
+        else
+        {
+            showError = true;
+        }
     }
 }

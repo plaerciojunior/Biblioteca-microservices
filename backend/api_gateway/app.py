@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 import requests
 
@@ -19,6 +19,26 @@ def index():
 
 #ROTAS USUÁRIO
 
+#Login
+@app.route('/users/login', methods=['POST'])
+def login_usuario():
+
+    response = requests.post(
+        f'{USER_SERVICE}/users/login',
+        json=request.json
+    )
+
+    return jsonify(response.json()), response.status_code
+
+#Logout
+@app.route('/users/logout', methods=['POST'])
+def logout_usuario():
+    response = requests.post(
+        f'{USER_SERVICE}/users/logout'
+    )
+
+    return jsonify(response.json()), response.status_code
+
 #Criar usuário
 @app.route('/users', methods=['POST'])
 def criar_usuario():
@@ -34,11 +54,21 @@ def criar_usuario():
 @app.route('/users', methods=['GET'])
 def listar_usuarios():
 
-    response = requests.get(
+    response = requests.get( 
         f'{USER_SERVICE}/users'
     )
 
     return jsonify(response.json()), response.status_code
+
+
+#Download / Visualização de PDF do Livro
+@app.route('/books/pdf/<filename>', methods=['GET'])
+def get_livro_pdf(filename):
+    response = requests.get(f'{BOOK_SERVICE}/books/pdf/{filename}')
+    if response.status_code == 200:
+        return Response(response.content, mimetype=response.headers.get('content-type', 'application/pdf'))
+    return jsonify({"Status": "PDF não encontrado"}), response.status_code
+
 
 #Usuários por ID
 @app.route('/users/<int:id>', methods=['GET'])

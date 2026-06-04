@@ -1,6 +1,8 @@
 @page "/my-loans"
 @layout MainLayout
 @using BibliotecaMicroservice.Models
+@inject BibliotecaMicroservice.Handlers.LoanHandler LoanHandler
+@inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
 
 <div class="flex flex-col gap-12 pt-4">
 
@@ -57,7 +59,7 @@
                                         Renovar
                                     </button>
                                     
-                                    <button @onclick="() => DevolverLivro(loan)" class="px-4 py-2 bg-[#ffdad6] text-[#93000a] border-2 border-on-background shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-label-md text-xs uppercase font-bold hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
+                                    <button @onclick="() => DevolverLivroAsync(loan)" class="px-4 py-2 bg-[#ffdad6] text-[#93000a] border-2 border-on-background shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-label-md text-xs uppercase font-bold hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] transition-all">
                                         Devolver
                                     </button>
                                     
@@ -138,41 +140,75 @@
         readingLoan = null;
     }
 
-    private void DevolverLivro(Loan loan)
+    protected override async Task OnInitializedAsync()
     {
-        MyActiveLoans.Remove(loan);
-        loan.ReturnedDate = DateTime.Now;
-        loan.IsOverdue = false;
-        PastLoans.Insert(0, loan); // Adiciona no topo do histórico
+        await CarregarEmprestimosAsync();
     }
 
-    // Mock de dados exclusivo para visualização
-    private List<Loan> MyActiveLoans = new()
+    private async Task CarregarEmprestimosAsync()
     {
-        new Loan 
-        { 
-            BookTitle = "Neuromancer", 
-            BookAuthor = "William Gibson", 
-            CoverUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuC_E9dyrYFfNeQyQF1F38WRUhQ4zgVeCByWDbxPnhQmdb3THL9pXb8cZ6cNLVHCpI10TWEREXlx8-rfpxTHKfOqXYK8IxbmL9A7A98lzxkcL_xEhXuY0yR-PaaJ3NV34lDJwDJZa9lK3z6L58gEDUg2vLBmLnC_rF98sXwMwg6klYobC17rxJFHX-zPcxzeAHgM8iJ3seo6-nnrPswqCX0yvuLLQHK7r5kZOOpch261uO864DuBD6pXiXsNcCzIQn6TCZdK0j7hMUOr",
-            Type = LoanType.Physical,
-            DueDate = DateTime.Now.AddDays(5),
-            IsOverdue = false
-        },
-        new Loan 
-        { 
-            BookTitle = "Snow Crash", 
-            BookAuthor = "Neal Stephenson", 
-            CoverUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuCwRDceLBTi1gDw-dpzn-cs64LrPBd3FgNx6VQflH2yej-GSScdKSJnw3F0CUJJH4QR8X5T6IEEzkSF85tKz0yYhMvtjqpn3iub_0cVCdQNdlgLjXlK3LmFTHyDbHnn3_ZAz0z7iy8kPk1gWjNHv_K2FkFO0AmtIPOzjCl8QGz1grA8bOGw_kYGJkextSmIC9V4IlsT7DHfCfW_XOtpf6xmtymFe6k6dUW0QRTSk9etHgdjTgXC1htdo7IjdRaaLF0wzh6uRuF-etxQ",
-            Type = LoanType.Online,
-            DueDate = DateTime.Now.AddDays(-2),
-            IsOverdue = true
-        }
-    };
+        int userId = 3; // Alice Vance - Simulando usuário logado
+        var loans = await LoanHandler.GetUserLoansAsync(userId);
+        
+        MyActiveLoans.Clear();
+        PastLoans.Clear();
+        
+        if (loans != null)
+        {
+            foreach (var l in loans)
+            {
+                var book = await BookHandler.GetBookAsync(l.livro_id);
+                var loanDate = DateTime.TryParse(l.data_emprestimo, out var d) ? d : DateTime.Now;
+                var dueDate = loanDate.AddDays(14);
+                var isOverdue = l.status == "ativo" && DateTime.Now > dueDate;
 
-    private List<Loan> PastLoans = new()
+                var model = new Loan
+                {
+                    Id = l.id,
+                    BookTitle = book?.nome ?? "Desconhecido",
+                    BookAuthor = book?.autor ?? "Desconhecido",
+                    CoverUrl = ObterCapaPorTitulo(book?.nome ?? ""),
+                    Type = !string.IsNullOrEmpty(book?.pdf_url) ? LoanType.Online : LoanType.Physical,
+                    PdfUrl = !string.IsNullOrEmpty(book?.pdf_url) ? $"http://localhost:5000/books/pdf/{book?.pdf_url}" : string.Empty,
+                    DueDate = dueDate,
+                    IsOverdue = isOverdue,
+                    ReturnedDate = DateTime.TryParse(l.data_devolucao, out var rd) ? rd : null
+                };
+                
+                if (l.status == "ativo")
+                {
+                    MyActiveLoans.Add(model);
+                }
+                else
+                    PastLoans.Add(model);
+            }
+        }
+    }
+
+    private string ObterCapaPorTitulo(string title)
     {
-        new Loan { BookTitle = "Dune", BookAuthor = "Frank Herbert", CoverUrl = "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?q=80&w=400", Type = LoanType.Physical, ReturnedDate = DateTime.Now.AddDays(-28) },
-        new Loan { BookTitle = "Simulacra", BookAuthor = "Jean Baudrillard", CoverUrl = "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=400", Type = LoanType.Online, ReturnedDate = DateTime.Now.AddDays(-46) },
-        new Loan { BookTitle = "Form & Space", BookAuthor = "Francis D.K.", CoverUrl = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=400", Type = LoanType.Physical, ReturnedDate = DateTime.Now.AddDays(-110) }
-    };
+        title = title.ToLower();
+        if (title.Contains("neuromancer")) return "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?w=400";
+        if (title.Contains("snow crash")) return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400";
+        if (title.Contains("escuridão")) return "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400";
+        if (title.Contains("dune")) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400";
+        if (title.Contains("foundation")) return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400";
+        if (title.Contains("casmurro")) return "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?w=400"; 
+        return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400"; // Imagem genérica
+    }
+
+    private async Task DevolverLivroAsync(Loan loan)
+    {
+        var success = await LoanHandler.ReturnLoanAsync(loan.Id);
+        if (success)
+        {
+            MyActiveLoans.Remove(loan);
+            loan.ReturnedDate = DateTime.Now;
+            loan.IsOverdue = false;
+            PastLoans.Insert(0, loan);
+        }
+    }
+
+    private List<Loan> MyActiveLoans = new();
+    private List<Loan> PastLoans = new();
 }

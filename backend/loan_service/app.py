@@ -180,5 +180,20 @@ def listar_emprestimos_ativos():
 
 
 
+def seed_loans():
+    from pony.orm import db_session
+    with db_session:
+        if Emprestimo.select().count() == 0:
+            # Empréstimos para Alice (id=3) e Case (id=4)
+            # Alice pegou neuromancer (id=1) e snow crash (id=2)
+            # Case pegou dune (id=4)
+            Emprestimo(usuario_id=3, livro_id=1, status='ativo')
+            Emprestimo(usuario_id=3, livro_id=2, status='ativo')
+            Emprestimo(usuario_id=4, livro_id=4, status='ativo')
+            Emprestimo(usuario_id=3, livro_id=6, status='ativo')
+            commit()
+            print("Empréstimos mockados inseridos com sucesso no SQLite!")
+
 if __name__ == '__main__':
+    seed_loans()
     app.run(host="0.0.0.0", port=5003)

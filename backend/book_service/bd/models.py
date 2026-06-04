@@ -16,6 +16,8 @@ class Livro(db.Entity):
 
     ano_publicacao = Required(int)
 
+    pdf_url = Optional(str)
+
     disponivel = Required(bool, default=True)
 
     criado_em = Required(datetime,default=lambda: datetime.now(timezone.utc))

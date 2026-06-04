@@ -1,6 +1,7 @@
 ﻿@page "/catalog"
 @layout MainLayout
 @using BibliotecaMicroservice.Models
+@inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
 
 @* Adicionamos um pt-12 (padding-top) para "abaixar" o conteúdo conforme solicitado *@
 <div class="flex flex-col gap-12 pt-12">
@@ -77,21 +78,43 @@
 
 @code {
     private int? selectedBookId;
-    private List<string> Tags = new() { "SCI-FI", "ARCHITECTURE", "TECH", "DESIGN" };
+    private List<string> Tags = new() { "LITERATURA", "SCI-FI", "FANTASIA" };
 
-    private List<Book> FeaturedBooks = new() {
-        new Book { Title = "Neuromancer", Author = "William Gibson", CoverUrl = "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?w=400" },
-        new Book { Title = "Form & Space", Author = "Francis D.K.", CoverUrl = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400" },
-        new Book { Title = "Hackers", Author = "Steven Levy", CoverUrl = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400" }
-    };
+    private List<Book> FeaturedBooks = new();
 
-    private List<Book> AllBooks = new() {
-        new Book { Title = "Dune", Author = "Frank Herbert", CoverUrl = "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=300" },
-        new Book { Title = "Grid Systems", Author = "J. Müller-Brockmann", CoverUrl = "https://images.unsplash.com/photo-1507721999472-8ed4421c4af2?w=300" },
-        new Book { Title = "Snow Crash", Author = "Neal Stephenson", CoverUrl = "https://images.unsplash.com/photo-1518770660439-4636190af475?w=300" },
-        new Book { Title = "Typography", Author = "Emil Ruder", CoverUrl = "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=300" },
-        new Book { Title = "Simulacra", Author = "Jean Baudrillard", CoverUrl = "https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?w=300" }
-    };
+    protected override async Task OnInitializedAsync()
+    {
+        var apiBooks = await BookHandler.GetBooksAsync();
+        if (apiBooks != null)
+        {
+            // Ordena a lista para que qualquer livro com "casmurro" no título venha primeiro
+            var sortedBooks = apiBooks.OrderByDescending(b => b.nome.ToLower().Contains("casmurro")).ToList();
+            
+            foreach (var b in sortedBooks)
+            {
+                FeaturedBooks.Add(new Book
+                {
+                    Id = b.id,
+                    Title = b.nome,
+                    Author = b.autor,
+                    Category = b.categoria,
+                    CoverUrl = ObterCapaPorTitulo(b.nome)
+                });
+            }
+        }
+    }
+
+    private string ObterCapaPorTitulo(string title)
+    {
+        title = title.ToLower();
+        if (title.Contains("neuromancer")) return "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?w=400";
+        if (title.Contains("snow crash")) return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=400";
+        if (title.Contains("escuridão")) return "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400";
+        if (title.Contains("dune")) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400";
+        if (title.Contains("foundation")) return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400";
+        if (title.Contains("casmurro")) return "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?w=400"; 
+        return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400"; // Imagem genérica para novos livros
+    }
 
     private void AbrirCheckout(int id) {
         selectedBookId = id;

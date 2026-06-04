@@ -8,6 +8,7 @@ public class Book
     public string ISBN { get; set; } = string.Empty;
     public string Publisher { get; set; } = string.Empty;
     public string CoverUrl { get; set; } = string.Empty;
+    public string PdfUrl { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public BookStatus Status { get; set; }
     public int TotalCopies { get; set; }
@@ -19,10 +20,12 @@ public class Book
 
 public class Loan
 {
+    public int Id { get; set; }
     public string UserName { get; set; } = string.Empty;
     public string BookTitle { get; set; } = string.Empty;
     public string BookAuthor { get; set; } = string.Empty;
     public string CoverUrl { get; set; } = string.Empty;
+    public string PdfUrl { get; set; } = string.Empty;
     public LoanType Type { get; set; }
     public DateTime LoanDate { get; set; }
     public DateTime DueDate { get; set; }

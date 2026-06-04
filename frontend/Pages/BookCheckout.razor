@@ -1,5 +1,7 @@
 @layout MainLayout
 @using BibliotecaMicroservice.Models
+@inject BibliotecaMicroservice.Handlers.LoanHandler LoanHandler
+@inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
     
@@ -93,7 +95,14 @@
                         <p class="text-[10px] font-bold text-on-surface-variant leading-tight uppercase tracking-tight">
                             * Ao confirmar, os dados brutos de locação serão processados pelo microsserviço de gestão de acervo.
                         </p>
-                        <button
+                        
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="bg-[#ffdad6] text-[#93000a] font-bold p-3 border-2 border-on-background shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm uppercase">
+                                Erro: @errorMessage
+                            </div>
+                        }
+                        <button @onclick="ConfirmarAluguel"
                             class="w-full bg-primary-container border-2 border-on-background py-5 font-display-lg text-xl font-black uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all flex items-center justify-center gap-3 group">
                             Confirmar Aluguel
                             <span
@@ -108,17 +117,58 @@
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public int BookId { get; set; }
     private DateTime ReturnDate { get; set; } = DateTime.Now.AddDays(14);
+    private string errorMessage = "";
     
     // Mock dos dados brutos do livro
     private Book Book = new Book
     {
-        Title = "Neuromancer",
-        Author = "William Gibson",
-        CoverUrl = "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?q=80&w=600&auto=format&fit=crop"
+        Title = "Carregando...",
+        Author = "Aguarde...",
+        CoverUrl = "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop"
     };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var b = await BookHandler.GetBookAsync(BookId);
+        if (b != null)
+        {
+            Book.Title = b.nome;
+            Book.Author = b.autor;
+            Book.CoverUrl = ObterCapaPorTitulo(b.nome);
+        }
+    }
+
+    private string ObterCapaPorTitulo(string title)
+    {
+        title = title.ToLower();
+        if (title.Contains("neuromancer")) return "https://images.unsplash.com/photo-1618557161755-9ef633e88c0a?w=600";
+        if (title.Contains("snow crash")) return "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600";
+        if (title.Contains("escuridão")) return "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600";
+        if (title.Contains("dune")) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600";
+        if (title.Contains("foundation")) return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600";
+        if (title.Contains("casmurro")) return "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?w=600"; 
+        return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600"; // Imagem genérica
+    }
 
     private async Task FecharModal()
     {
         await OnClose.InvokeAsync();
+    }
+
+    private async Task ConfirmarAluguel()
+    {
+        errorMessage = "";
+        // Simulando ID do usuário logado (Utilizando 4 - Case Henry, mockado no backend)
+        int userId = 4; 
+        var result = await LoanHandler.CreateLoanAsync(userId, BookId);
+        
+        if (result.Success)
+        {
+            await FecharModal();
+        }
+        else
+        {
+            errorMessage = result.Message;
+        }
     }
 }
