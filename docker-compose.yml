@@ -11,12 +11,14 @@ services:
       - LOAN_SERVICE_URL=http://loan_service:5003
       - ANALYTICS_SERVICE_URL=http://analytics_service:5004
       - PAYMENT_SERVICE_URL=http://payment_service:5005
+      - RECOMMENDATION_SERVICE_URL=http://recommendation_service:5006
     depends_on:
       - user_service
       - book_service
       - loan_service
       - analytics_service
       - payment_service
+      - recommendation_service
 
   user_service:
     build:
@@ -64,6 +66,18 @@ services:
       - "5005:5005"
     volumes:
       - ./backend/payment_service/bd:/app/bd
+
+  recommendation_service:
+    build:
+      context: ./backend/recommendation_service
+    ports:
+      - "5006:5006"
+    environment:
+      - BOOK_SERVICE_URL=http://book_service:5002
+      - LOAN_SERVICE_URL=http://loan_service:5003
+    depends_on:
+      - book_service
+      - loan_service
 
   frontend:
     build:

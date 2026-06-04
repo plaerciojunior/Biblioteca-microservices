@@ -513,6 +513,90 @@ GET /loans/user/1
 
 ---
 
+# Recomendações
+
+## Recomendações personalizadas
+
+**GET** `/recommendations/user/{id}`
+
+### Exemplo
+
+```http
+GET /recommendations/user/1
+```
+
+### Descrição
+
+Retorna até 5 livros recomendados com base no histórico de empréstimos do usuário.
+
+Caso o usuário não possua histórico, o sistema retorna os livros mais populares disponíveis.
+
+### Resposta (200)
+
+```json
+[
+  {
+    "id": 9,
+    "nome": "1984",
+    "autor": "George Orwell",
+    "categoria": "Sci-Fi",
+    "disponivel": true
+  }
+]
+```
+
+### Possíveis erros
+
+### Erro ao consultar histórico de empréstimos (500)
+
+```json
+{
+  "Status": "Erro ao consultar histórico de empréstimos"
+}
+```
+
+### Erro ao consultar catálogo de livros (500)
+
+```json
+{
+  "Status": "Erro ao consultar catálogo de livros"
+}
+```
+
+---
+
+## Tendências globais
+
+**GET** `/recommendations/trending`
+
+### Descrição
+
+Retorna os 5 livros mais populares da biblioteca.
+
+### Resposta (200)
+
+```json
+[
+  {
+    "id": 9,
+    "nome": "1984",
+    "autor": "George Orwell",
+    "categoria": "Sci-Fi",
+    "disponivel": true
+  }
+]
+```
+
+### Erro ao consultar catálogo de livros (500)
+
+```json
+{
+  "Status": "Erro ao consultar catálogo de livros"
+}
+```
+
+---
+
 # CORS
 
 A API possui CORS habilitado através da biblioteca Flask-CORS.
@@ -528,7 +612,8 @@ API Gateway (5000)
 ├─ Book Service (5002)
 ├─ Loan Service (5003)
 ├─ Analytics Service (5004)
-└─ Payment Service (5005)
+├─ Payment Service (5005)
+└─ Recommendation Service (5006)
 
 
 # Observações

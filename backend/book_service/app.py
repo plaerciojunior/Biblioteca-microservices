@@ -177,8 +177,8 @@ def seed_books():
         if Livro.select().count() == 0:
             Livro(nome="neuromancer", autor="William Gibson", categoria="Cyberpunk / Sci-Fi", ano_publicacao=1984, disponivel=True, pdf_url="")
             Livro(nome="snow crash", autor="Neal Stephenson", categoria="Sci-Fi", ano_publicacao=1992, disponivel=True, pdf_url="")
-            Livro(nome="a mão esquerda da escuridão", autor="Ursula K. Le Guin", categoria="Sci-Fi", ano_publicacao=1969, disponivel=True, pdf_url="")
-            Livro(nome="dune", autor="Frank Herbert", categoria="Fantasia / Sci-Fi", ano_publicacao=1965, disponivel=True, pdf_url="")
+            Livro(nome="a mão esquerda da escuridão", autor="Ursula K. Le Guin", categoria="Sci-Fi", ano_publicacao=1969, disponivel=False, pdf_url="")
+            Livro(nome="dune", autor="Frank Herbert", categoria="Fantasia / Sci-Fi", ano_publicacao=1965, disponivel=False, pdf_url="")
             Livro(nome="foundation", autor="Isaac Asimov", categoria="Classic Sci-Fi", ano_publicacao=1951, disponivel=True, pdf_url="")
             Livro(nome="dom casmurro", autor="Machado de Assis", categoria="Literatura Brasileira", ano_publicacao=1899, disponivel=True, pdf_url="dom_casmurro.pdf")
             Livro(nome="vidas secas", autor="Graciliano Ramos", categoria="Literatura Brasileira", ano_publicacao=1938, disponivel=True, pdf_url="vidas_secas.pdf")
