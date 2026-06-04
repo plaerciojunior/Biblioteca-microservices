@@ -12,11 +12,12 @@ BOOK_SERVICE = os.environ.get('BOOK_SERVICE_URL', 'http://localhost:5002')
 LOAN_SERVICE = os.environ.get('LOAN_SERVICE_URL', 'http://localhost:5003')
 ANALYTICS_SERVICE = os.environ.get('ANALYTICS_SERVICE_URL', 'http://localhost:5004')
 PAYMENT_SERVICE = os.environ.get('PAYMENT_SERVICE_URL', 'http://localhost:5005')
+RECOMMENDATION_SERVICE = os.environ.get('RECOMMENDATION_SERVICE_URL', 'http://localhost:5006')
 
 #Rota Raiz
 @app.route('/', methods=['GET'])
 def index():
-    return jsonify({"message": "API Gateway está rodando! As rotas disponíveis são /users, /books, /loans, /analytics e /payments."}), 200
+    return jsonify({"message": "API Gateway está rodando! As rotas disponíveis são /users, /books, /loans, /analytics, /payments e recommendations/user/."}), 200
 
 #Rota Analytics
 @app.route('/analytics/dashboard', methods=['GET'])
@@ -252,6 +253,27 @@ def listar_emprestimos_ativos():
 @app.route('/payments/pay', methods=['POST'])
 def processar_pagamento():
     response = requests.post(f'{PAYMENT_SERVICE}/payments/pay', json=request.json)
+    return jsonify(response.json()), response.status_code
+
+
+#ROTA RECOMENDAÇÃO
+
+#Para o usuário (minhas tendências)
+@app.route('/recommendations/user/<int:id>', methods=['GET'])
+def get_recommendations(id):
+
+    response = requests.get(f'{RECOMMENDATION_SERVICE}/recommendations/user/{id}')
+
+    return jsonify(response.json()), response.status_code
+
+#Geral (tendências globais)
+@app.route('/recommendations/trending', methods=['GET'])
+def get_trending():
+
+    response = requests.get(
+        f'{RECOMMENDATION_SERVICE}/recommendations/trending'
+    )
+
     return jsonify(response.json()), response.status_code
 
 if __name__ == "__main__":
