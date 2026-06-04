@@ -2,6 +2,7 @@
 @layout BibliotecaMicroservice.Layout.AuthLayout
 @inject NavigationManager NavManager
 @inject BibliotecaMicroservice.Handlers.UserHandler UserHandler
+@inject BibliotecaMicroservice.Services.AuthService AuthService
 
 <div class="relative min-h-screen w-full flex items-center justify-center p-4 md:p-8 font-body-md overflow-x-hidden">
     <!-- Fundo Desfocado -->
@@ -56,9 +57,10 @@
     private async Task FazerLogin() {
         ErrorMessage = "";
         
-        var user = await UserHandler.LoginAsync(LoginModel);
+        var result = await UserHandler.LoginAsync(LoginModel);
         
-        if (user != null) {
+        if (result.Success && !string.IsNullOrEmpty(result.Token)) {
+            await AuthService.LoginAsync(result.Token);
             NavManager.NavigateTo("/catalog");
         } else {
             ErrorMessage = "Usuário ou senha inválidos.";

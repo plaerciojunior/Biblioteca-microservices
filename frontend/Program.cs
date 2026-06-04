@@ -10,5 +10,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddScoped<BibliotecaMicroservice.Handlers.UserHandler>();
 builder.Services.AddScoped<BibliotecaMicroservice.Handlers.BookHandler>();
 builder.Services.AddScoped<BibliotecaMicroservice.Handlers.LoanHandler>();
+builder.Services.AddScoped<BibliotecaMicroservice.Services.SearchService>();
+builder.Services.AddScoped<BibliotecaMicroservice.Services.AuthService>();
+builder.Services.AddScoped<BibliotecaMicroservice.Services.SnackbarService>();
 
 await builder.Build().RunAsync();

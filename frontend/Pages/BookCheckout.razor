@@ -2,6 +2,8 @@
 @using BibliotecaMicroservice.Models
 @inject BibliotecaMicroservice.Handlers.LoanHandler LoanHandler
 @inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
+@inject BibliotecaMicroservice.Services.AuthService AuthService
+@inject BibliotecaMicroservice.Services.SnackbarService SnackbarService
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
     
@@ -23,10 +25,18 @@
             </h2>
             <p class="font-body-md text-on-surface-variant font-bold mt-2">@Book.Author</p>
             
-            <div
-                class="mt-8 bg-[#ccc460] border-2 border-on-background px-4 py-1 font-label-sm font-bold uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                Exemplar Disponível
-            </div>
+            @if (Book.Status == BookStatus.Available)
+            {
+                <div class="mt-8 bg-[#ccc460] border-2 border-on-background px-4 py-1 font-label-sm font-bold uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    Exemplar Disponível
+                </div>
+            }
+            else
+            {
+                <div class="mt-8 bg-[#ffdad6] text-[#93000a] border-2 border-on-background px-4 py-1 font-label-sm font-bold uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    Indisponível no Momento
+                </div>
+            }
         </div>
 
         <div
@@ -102,8 +112,8 @@
                                 Erro: @errorMessage
                             </div>
                         }
-                        <button @onclick="ConfirmarAluguel"
-                            class="w-full bg-primary-container border-2 border-on-background py-5 font-display-lg text-xl font-black uppercase shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all flex items-center justify-center gap-3 group">
+                        <button @onclick="ConfirmarAluguel" disabled="@(Book.Status != BookStatus.Available)"
+                            class="w-full @(Book.Status == BookStatus.Available ? "bg-primary-container hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] cursor-pointer" : "bg-surface-variant text-outline cursor-not-allowed shadow-none") border-2 border-on-background py-5 font-display-lg text-xl font-black uppercase active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all flex items-center justify-center gap-3 group">
                             Confirmar Aluguel
                             <span
                             class="material-symbols-outlined font-black group-hover:scale-110 transition-transform">check_circle</span>
@@ -135,6 +145,7 @@
             Book.Title = b.nome;
             Book.Author = b.autor;
             Book.CoverUrl = ObterCapaPorTitulo(b.nome);
+            Book.Status = b.disponivel ? BookStatus.Available : BookStatus.Loaned;
         }
     }
 
@@ -147,6 +158,11 @@
         if (title.Contains("dune")) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600";
         if (title.Contains("foundation")) return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600";
         if (title.Contains("casmurro")) return "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?w=600"; 
+        if (title.Contains("vidas secas")) return "https://images.unsplash.com/photo-1504439904031-93ded9f93e4e?w=600"; 
+        if (title.Contains("senhor dos anéis")) return "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?w=600";
+        if (title.Contains("1984")) return "https://images.unsplash.com/photo-1501139083538-0139583c060f?w=600";
+        if (title.Contains("fahrenheit")) return "https://images.unsplash.com/photo-1497215848520-2ce09503460e?w=600";
+        if (title.Contains("vento")) return "https://images.unsplash.com/photo-1473654729523-203e25dfda10?w=600";
         return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600"; // Imagem genérica
     }
 
@@ -157,18 +173,25 @@
 
     private async Task ConfirmarAluguel()
     {
+        if (AuthService.CurrentUserId == null)
+        {
+            errorMessage = "Sessão expirada. Faça login novamente.";
+            return;
+        }
+
         errorMessage = "";
-        // Simulando ID do usuário logado (Utilizando 4 - Case Henry, mockado no backend)
-        int userId = 4; 
+        int userId = AuthService.CurrentUserId.Value; 
         var result = await LoanHandler.CreateLoanAsync(userId, BookId);
         
         if (result.Success)
         {
+            SnackbarService.Show("Livro alugado com sucesso!");
             await FecharModal();
         }
         else
         {
             errorMessage = result.Message;
+            SnackbarService.Show(result.Message, true);
         }
     }
 }

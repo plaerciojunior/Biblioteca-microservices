@@ -2,6 +2,24 @@
 @layout MainLayout
 @using BibliotecaMicroservice.Models
 @inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
+@inject BibliotecaMicroservice.Services.SearchService SearchService
+@inject BibliotecaMicroservice.Handlers.LoanHandler LoanHandler
+@inject BibliotecaMicroservice.Services.AuthService AuthService
+@inject NavigationManager NavManager
+
+@implements IDisposable
+
+<style>
+    @@keyframes infinite-scroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(calc(-100% - 32px)); } /* 32px é equivalente ao gap-8 */
+    }
+    .animate-infinite-scroll {
+        animation: infinite-scroll 25s linear infinite;
+    }
+    .card-hover { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .card-hover:hover { transform: scale(1.02) translateY(-4px); box-shadow: 8px 8px 0px 0px #1d1b1f; }
+</style>
 
 @* Adicionamos um pt-12 (padding-top) para "abaixar" o conteúdo conforme solicitado *@
 <div class="flex flex-col gap-12 pt-12">
@@ -22,46 +40,91 @@
         </div> *@
 
         <div class="flex flex-wrap gap-4">
-            <button class="px-6 py-2 border-2 border-on-background bg-primary-container font-label-md font-black uppercase tracking-wider neo-shadow hover:bg-secondary-container transition-all">
+            <button @onclick='() => SelectTag("TUDO")' class="px-6 py-2 border-2 border-on-background @(selectedTag == "TUDO" ? "bg-primary-container" : "bg-surface-container-lowest") font-label-md font-black uppercase tracking-wider neo-shadow hover:bg-secondary-container transition-all">
                 [TUDO]
             </button>
             @foreach (var tag in Tags)
             {
-                <button class="px-6 py-2 border-2 border-on-background bg-surface-container-lowest font-label-md font-bold uppercase neo-shadow hover:bg-secondary-container transition-all">
+                <button @onclick='() => SelectTag(tag)' class="px-6 py-2 border-2 border-on-background @(selectedTag == tag ? "bg-primary-container" : "bg-surface-container-lowest") font-label-md font-bold uppercase neo-shadow hover:bg-secondary-container transition-all">
                     [@tag]
                 </button>
             }
         </div>
     </header>
 
-    <section class="flex flex-col gap-6">
-        <h2 class="font-display-lg text-3xl uppercase border-b-4 border-on-background pb-2 w-max pr-8 font-black italic">
-            Tendências
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            @foreach (var book in FeaturedBooks)
-            {
-                <article class="bg-primary-fixed border-2 border-on-background neo-shadow flex flex-col h-full group relative overflow-hidden">
-                    @* Área da Capa com Mix-Blend e Grayscale *@
-                    <div class="h-48 border-b-2 border-on-background overflow-hidden relative bg-white">
-                        <img src="@book.CoverUrl" class="w-full h-full object-cover grayscale mix-blend-multiply opacity-80 group-hover:scale-105 transition-transform duration-500" />
-                    </div>
-                    
-                    @* Info do Livro (Caixa interna) *@
-                    <div class="p-6 flex flex-col flex-grow justify-between gap-4 bg-surface-container-lowest m-2 border-2 border-on-background">
-                        <div>
-                            <h3 class="font-headline-lg text-2xl uppercase line-clamp-2 mb-1 font-black leading-tight">@book.Title</h3>
-                            <p class="font-label-sm text-on-surface-variant font-bold uppercase text-xs">@book.Author</p>
+    @if (string.IsNullOrWhiteSpace(SearchService.SearchTerm) && selectedTag == "TUDO")
+    {
+        <!-- Minhas Tendências -->
+        <section class="w-full overflow-hidden z-10 relative">
+            <h2 class="font-display-lg text-3xl uppercase border-b-4 border-on-background pb-2 w-max pr-8 font-black italic mb-6">
+                Minhas Tendências
+            </h2>
+            <div class="w-full overflow-hidden group pb-4 pt-4">
+                <div class="flex gap-8 w-max">
+                    @* Duplicamos as listas com o For para garantir que telas Ultra-Wide não fiquem com buracos ao rolar *@
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        <div aria-hidden="@(i != 0 ? "true" : "false")" class="flex gap-8 flex-shrink-0 animate-infinite-scroll group-hover:[animation-play-state:paused]">
+                            @foreach (var book in MyTrendsBooks)
+                            {
+                                <article class="min-w-[280px] max-w-[280px] bg-white border-2 border-on-background shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex flex-col flex-shrink-0 group/card cursor-pointer card-hover">
+                                    <div class="h-56 w-full border-b-2 border-on-background bg-surface-variant relative overflow-hidden">
+                                        <img alt="Capa de @book.Title" class="object-cover w-full h-full grayscale group-hover/card:grayscale-0 transition-all duration-500 group-hover/card:scale-105" src="@book.CoverUrl"/>
+                                        <div class="absolute inset-0 bg-[#d1b3ff]/20 mix-blend-multiply group-hover/card:opacity-0 transition-opacity duration-300"></div>
+                                    </div>
+                                    <div class="p-6 flex flex-col flex-grow justify-between gap-4 bg-surface-container-lowest">
+                                        <div>
+                                            <div class="font-label-sm text-xs text-on-surface-variant mb-1 uppercase tracking-wider font-bold">@book.Category</div>
+                                            <h3 class="font-headline-md text-xl uppercase line-clamp-2 mb-1 font-black leading-tight">@book.Title</h3>
+                                            <p class="font-label-sm text-on-surface-variant font-bold uppercase text-xs">@book.Author</p>
+                                        </div>
+                                        <button @onclick="() => AbrirCheckout(book.Id)" class="mt-2 w-full bg-primary-container border-2 border-on-background py-3 font-label-md font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                                            EMPRÉSTIMO
+                                        </button>
+                                    </div>
+                                </article>
+                            }
                         </div>
-                        
-                        <button @onclick="() => AbrirCheckout(book.Id)" class="mt-4 w-full bg-primary-container border-2 border-on-background py-3 font-label-md font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
-                            EMPRÉSTIMO
-                        </button>
-                    </div>
-                </article>
-            }
-        </div>
-    </section>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <!-- Tendências Globais -->
+        <section class="w-full overflow-hidden z-10 relative mt-4">
+            <h2 class="font-display-lg text-3xl uppercase border-b-4 border-on-background pb-2 w-max pr-8 font-black italic mb-6">
+                Tendências Globais
+            </h2>
+            <div class="w-full overflow-hidden group pb-4 pt-4">
+                <div class="flex gap-8 w-max">
+                    @for (int i = 0; i < 4; i++)
+                    {
+                        @* Modificamos a duração (35s) para as globais rolarem em uma velocidade diferente *@
+                        <div aria-hidden="@(i != 0 ? "true" : "false")" class="flex gap-8 flex-shrink-0 animate-infinite-scroll group-hover:[animation-play-state:paused]" style="animation-duration: 35s;">
+                            @foreach (var book in GlobalTrendsBooks)
+                            {
+                                <article class="min-w-[280px] max-w-[280px] bg-white border-2 border-on-background shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex flex-col flex-shrink-0 group/card cursor-pointer card-hover">
+                                    <div class="h-56 w-full border-b-2 border-on-background bg-surface-variant relative overflow-hidden">
+                                        <img alt="Capa de @book.Title" class="object-cover w-full h-full grayscale group-hover/card:grayscale-0 transition-all duration-500 group-hover/card:scale-105" src="@book.CoverUrl"/>
+                                        <div class="absolute inset-0 bg-[#d1b3ff]/20 mix-blend-multiply group-hover/card:opacity-0 transition-opacity duration-300"></div>
+                                    </div>
+                                    <div class="p-6 flex flex-col flex-grow justify-between gap-4 bg-surface-container-lowest">
+                                        <div>
+                                            <div class="font-label-sm text-xs text-on-surface-variant mb-1 uppercase tracking-wider font-bold">@book.Category</div>
+                                            <h3 class="font-headline-md text-xl uppercase line-clamp-2 mb-1 font-black leading-tight">@book.Title</h3>
+                                            <p class="font-label-sm text-on-surface-variant font-bold uppercase text-xs">@book.Author</p>
+                                        </div>
+                                        <button @onclick="() => AbrirCheckout(book.Id)" class="mt-2 w-full bg-primary-container border-2 border-on-background py-3 font-label-md font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                                            EMPRÉSTIMO
+                                        </button>
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
 
         
         <div class="flex justify-center mt-12">
@@ -69,6 +132,51 @@
                 Carregar Mais
             </button>
         </div>
+    }
+    else
+    {
+        <!-- Resultados da Busca -->
+        <section class="w-full z-10 relative mt-4">
+            <h2 class="font-display-lg text-3xl uppercase border-b-4 border-on-background pb-2 w-max pr-8 font-black italic mb-6">
+                @if (!string.IsNullOrWhiteSpace(SearchService.SearchTerm))
+                {
+                    <text>Resultados para "@SearchService.SearchTerm"</text>
+                }
+                else
+                {
+                    <text>Explorando: @selectedTag</text>
+                }
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 pb-4 pt-4">
+                @foreach (var book in FilteredBooks)
+                {
+                    <article class="bg-white border-2 border-on-background shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] flex flex-col group/card cursor-pointer card-hover">
+                        <div class="h-56 w-full border-b-2 border-on-background bg-surface-variant relative overflow-hidden">
+                            <img alt="Capa de @book.Title" class="object-cover w-full h-full grayscale group-hover/card:grayscale-0 transition-all duration-500 group-hover/card:scale-105" src="@book.CoverUrl"/>
+                            <div class="absolute inset-0 bg-[#d1b3ff]/20 mix-blend-multiply group-hover/card:opacity-0 transition-opacity duration-300"></div>
+                        </div>
+                        <div class="p-6 flex flex-col flex-grow justify-between gap-4 bg-surface-container-lowest">
+                            <div>
+                                <div class="font-label-sm text-xs text-on-surface-variant mb-1 uppercase tracking-wider font-bold">@book.Category</div>
+                                <h3 class="font-headline-md text-xl uppercase line-clamp-2 mb-1 font-black leading-tight">@book.Title</h3>
+                                <p class="font-label-sm text-on-surface-variant font-bold uppercase text-xs">@book.Author</p>
+                            </div>
+                            <button @onclick="() => AbrirCheckout(book.Id)" class="mt-2 w-full bg-primary-container border-2 border-on-background py-3 font-label-md font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                                EMPRÉSTIMO
+                            </button>
+                        </div>
+                    </article>
+                }
+            </div>
+            
+            @if (!FilteredBooks.Any())
+            {
+                <div class="w-full p-12 text-center border-4 border-on-background border-dashed bg-surface-variant mt-4">
+                    <p class="font-headline-md text-xl font-bold uppercase text-on-surface-variant">Nenhum livro encontrado.</p>
+                </div>
+            }
+        </section>
+    }
 </div>
 
 @if (selectedBookId.HasValue)
@@ -78,21 +186,53 @@
 
 @code {
     private int? selectedBookId;
+    private string selectedTag = "TUDO";
     private List<string> Tags = new() { "LITERATURA", "SCI-FI", "FANTASIA" };
 
-    private List<Book> FeaturedBooks = new();
+    private List<Book> MyTrendsBooks = new();
+    private List<Book> GlobalTrendsBooks = new();
+
+    private IEnumerable<Book> FilteredBooks => GlobalTrendsBooks.Where(b => 
+        (string.IsNullOrWhiteSpace(SearchService.SearchTerm) || 
+         (b.Title?.Contains(SearchService.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
+         (b.Author?.Contains(SearchService.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+         (b.Category?.Contains(SearchService.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false))
+        &&
+        (selectedTag == "TUDO" || (b.Category?.Contains(selectedTag, StringComparison.OrdinalIgnoreCase) ?? false))
+    );
 
     protected override async Task OnInitializedAsync()
+    {
+        await AuthService.InitializeAsync();
+        if (AuthService.CurrentUserId == null)
+        {
+            NavManager.NavigateTo("/login");
+            return;
+        }
+
+        SearchService.OnSearchChanged += StateHasChanged;
+        LoanHandler.OnLoansChanged += AtualizarCatalogo;
+        await CarregarCatalogo();
+    }
+
+    private async void AtualizarCatalogo()
+    {
+        await CarregarCatalogo();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CarregarCatalogo()
     {
         var apiBooks = await BookHandler.GetBooksAsync();
         if (apiBooks != null)
         {
+            GlobalTrendsBooks.Clear();
             // Ordena a lista para que qualquer livro com "casmurro" no título venha primeiro
             var sortedBooks = apiBooks.OrderByDescending(b => b.nome.ToLower().Contains("casmurro")).ToList();
             
             foreach (var b in sortedBooks)
             {
-                FeaturedBooks.Add(new Book
+                GlobalTrendsBooks.Add(new Book
                 {
                     Id = b.id,
                     Title = b.nome,
@@ -101,7 +241,21 @@
                     CoverUrl = ObterCapaPorTitulo(b.nome)
                 });
             }
+            
+            // Minhas Tendências exibe apenas 3 livros selecionados
+            MyTrendsBooks = GlobalTrendsBooks.Take(3).ToList();
         }
+    }
+
+    public void Dispose()
+    {
+        SearchService.OnSearchChanged -= StateHasChanged;
+        LoanHandler.OnLoansChanged -= AtualizarCatalogo;
+    }
+
+    private void SelectTag(string tag)
+    {
+        selectedTag = tag;
     }
 
     private string ObterCapaPorTitulo(string title)
@@ -113,6 +267,11 @@
         if (title.Contains("dune")) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400";
         if (title.Contains("foundation")) return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400";
         if (title.Contains("casmurro")) return "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?w=400"; 
+        if (title.Contains("vidas secas")) return "https://images.unsplash.com/photo-1504439904031-93ded9f93e4e?w=400"; 
+        if (title.Contains("senhor dos anéis")) return "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?w=400";
+        if (title.Contains("1984")) return "https://images.unsplash.com/photo-1501139083538-0139583c060f?w=400";
+        if (title.Contains("fahrenheit")) return "https://images.unsplash.com/photo-1497215848520-2ce09503460e?w=400";
+        if (title.Contains("vento")) return "https://images.unsplash.com/photo-1473654729523-203e25dfda10?w=400";
         return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400"; // Imagem genérica para novos livros
     }
 

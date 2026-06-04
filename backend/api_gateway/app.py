@@ -194,6 +194,16 @@ def encerrar_emprestimo(id):
 
     return jsonify(response.json()), response.status_code
 
+#Renovar empréstimo
+@app.route('/loans/<int:id>/renew', methods=['PUT'])
+def renovar_emprestimo(id):
+
+    response = requests.put(
+        f'{LOAN_SERVICE}/loans/{id}/renew'
+    )
+
+    return jsonify(response.json()), response.status_code
+
 #Todos os empréstimos de um pelo id do usuário
 @app.route('/loans/user/<int:id>', methods=['GET'])
 def get_emprestimos_usuario(id):

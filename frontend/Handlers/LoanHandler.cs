@@ -1,12 +1,16 @@
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System;
 
 namespace BibliotecaMicroservice.Handlers
 {
     public class LoanHandler
     {
         private readonly HttpClient _httpClient;
+
+        public event Action? OnLoansChanged;
+        public void NotifyLoansChanged() => OnLoansChanged?.Invoke();
 
         public LoanHandler(HttpClient httpClient)
         {
@@ -19,7 +23,10 @@ namespace BibliotecaMicroservice.Handlers
             var response = await _httpClient.PostAsJsonAsync("http://localhost:5000/loans", request);
             
             if (response.IsSuccessStatusCode)
+            {
+                NotifyLoansChanged();
                 return (true, "Empréstimo realizado");
+            }
                 
             var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
             return (false, error?.GetValueOrDefault("Status") ?? "Erro ao realizar empréstimo");
@@ -40,7 +47,23 @@ namespace BibliotecaMicroservice.Handlers
         public async Task<bool> ReturnLoanAsync(int loanId)
         {
             var response = await _httpClient.PutAsync($"http://localhost:5000/loans/{loanId}", null);
-            return response.IsSuccessStatusCode;
+            if (response.IsSuccessStatusCode)
+            {
+                NotifyLoansChanged();
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> RenewLoanAsync(int loanId)
+        {
+            var response = await _httpClient.PutAsync($"http://localhost:5000/loans/{loanId}/renew", null);
+            if (response.IsSuccessStatusCode)
+            {
+                NotifyLoansChanged();
+                return true;
+            }
+            return false;
         }
     }
 

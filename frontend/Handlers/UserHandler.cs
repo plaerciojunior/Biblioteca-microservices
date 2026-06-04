@@ -14,17 +14,23 @@ namespace BibliotecaMicroservice.Handlers
             _httpClient = httpClient;
         }
 
-        public async Task<UserModel?> LoginAsync(LoginRequest request)
+        public async Task<(bool Success, string? Token)> LoginAsync(LoginRequest request)
         {
             // O frontend faz a requisição para o API Gateway
             var response = await _httpClient.PostAsJsonAsync("http://localhost:5000/users/login", request);
             
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<UserModel>();
+                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                return (true, result?.token);
             }
             
-            return null;
+            return (false, null);
+        }
+
+        public class LoginResponse
+        {
+            public string token { get; set; } = string.Empty;
         }
 
         public async Task<bool> LogoutAsync()

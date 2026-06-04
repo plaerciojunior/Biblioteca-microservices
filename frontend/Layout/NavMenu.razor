@@ -1,4 +1,7 @@
-﻿<aside class="hidden lg:flex flex-col h-full w-[260px] border-2 border-on-background bg-surface-container-low py-gutter px-4 shrink-0 neo-shadow sticky top-32" style="height: calc(100vh - 160px);">
+﻿@inject BibliotecaMicroservice.Services.AuthService AuthService
+@inject NavigationManager NavManager
+
+<aside class="hidden lg:flex flex-col h-full w-[260px] border-2 border-on-background bg-surface-container-low py-gutter px-4 shrink-0 neo-shadow sticky top-32" style="height: calc(100vh - 160px);">
     
     <div class="mb-8 flex items-center gap-4">
         <div class="w-12 h-12 border-2 border-on-background bg-secondary-container overflow-hidden shrink-0 flex items-center justify-center">
@@ -6,7 +9,7 @@
         </div>
         <div>
             <h2 class="font-headline-sm font-bold text-on-surface leading-tight">Minha Biblioteca</h2>
-            <p class="font-label-sm text-on-surface-variant">Conta de Leitor</p>
+            <p class="font-label-sm text-on-surface-variant truncate w-32">@(AuthService.CurrentUserName ?? "Conta de Leitor")</p>
         </div>
     </div>
 
@@ -22,9 +25,17 @@
     </nav>
 
     <div class="mt-auto pt-4 border-t-2 border-on-background flex flex-col gap-2">
-        <a class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant transition-colors duration-200 border-2 border-transparent" href="#">
+        <button @onclick="Sair" class="flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant transition-colors duration-200 border-2 border-transparent w-full text-left">
             <span class="material-symbols-outlined">logout</span>
             <span class="font-label-md">Sair</span>
-        </a>
+        </button>
     </div>
 </aside>
+
+@code {
+    private async Task Sair()
+    {
+        await AuthService.LogoutAsync();
+        NavManager.NavigateTo("/login");
+    }
+}

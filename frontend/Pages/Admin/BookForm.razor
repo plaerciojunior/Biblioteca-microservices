@@ -1,3 +1,5 @@
+@inject BibliotecaMicroservice.Services.SnackbarService SnackbarService
+
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-y-auto">
     
     <div class="relative w-full max-w-4xl bg-[#FFF8ED] border-2 border-on-background shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-10 mt-auto mb-auto">
@@ -55,7 +57,7 @@
 
             <div class="flex gap-6">
                 <button @onclick="Fechar" class="bg-surface-variant border-2 border-on-background px-8 py-4 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">Cancelar</button>
-                <button class="bg-[#d1b3ff] border-2 border-on-background px-10 py-4 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex gap-2 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <button @onclick="SalvarLivro" class="bg-[#d1b3ff] border-2 border-on-background px-10 py-4 font-bold uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex gap-2 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
                     <span class="material-symbols-outlined">save</span> Salvar
                 </button>
             </div>
@@ -84,6 +86,12 @@
     private Task Fechar()
     {
         return OnClose.InvokeAsync();
+    }
+
+    private async Task SalvarLivro()
+    {
+        SnackbarService.Show("Livro adicionado com sucesso!");
+        await Fechar();
     }
 
     public class BookFormModel

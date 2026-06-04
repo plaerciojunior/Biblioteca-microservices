@@ -19,6 +19,12 @@ def criar_emprestimo():
 
     usuario_id = data['usuario_id']
     livro_id = data['livro_id']
+    
+    # Verificar se já possui este livro ativo
+    emprestimo_ativo = select(e for e in Emprestimo if e.usuario_id == usuario_id and e.livro_id == livro_id and e.status == 'ativo').first()
+    if emprestimo_ativo:
+        return jsonify({"Status": "Você já possui um empréstimo ativo para este livro"}), 400
+
     usuario = requests.get(
         f'{USER_SERVICE}/users/{usuario_id}'
     )
@@ -47,7 +53,9 @@ def criar_emprestimo():
     # Criar empréstimo
     loan = Emprestimo(
         usuario_id=usuario_id,
-        livro_id=livro_id
+        livro_id=livro_id,
+        status='ativo',
+        data_emprestimo=datetime.now(timezone.utc)
     )
 
     # Atualizar disponibilidade do livro
@@ -130,6 +138,24 @@ def devolver_livro(id):
     return jsonify({
         "Status": "Livro devolvido"
     }),200
+
+#Renovar empréstimo
+@app.route('/loans/<int:id>/renew', methods=['PUT'])
+@db_session
+def renovar_emprestimo(id):
+
+    loan = Emprestimo.get(id=id)
+
+    if not loan:
+        return jsonify({"Status": "Empréstimo não encontrado"}), 404
+
+    if loan.status != 'ativo':
+        return jsonify({"Status": "Apenas empréstimos ativos podem ser renovados"}), 400
+
+    loan.data_emprestimo = datetime.now(timezone.utc)
+    commit()
+
+    return jsonify({"Status": "Empréstimo renovado com sucesso"}), 200
 
 #Lista todos os empréstimos de um usuário pelo id
 @app.route('/loans/user/<int:user_id>', methods=['GET'])

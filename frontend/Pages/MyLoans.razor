@@ -3,6 +3,11 @@
 @using BibliotecaMicroservice.Models
 @inject BibliotecaMicroservice.Handlers.LoanHandler LoanHandler
 @inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
+@inject BibliotecaMicroservice.Services.AuthService AuthService
+@inject BibliotecaMicroservice.Services.SnackbarService SnackbarService
+@inject NavigationManager NavManager
+
+@implements IDisposable
 
 <div class="flex flex-col gap-12 pt-4">
 
@@ -55,7 +60,7 @@
                                 }
                                 
                                 <div class="flex flex-wrap gap-3 mt-auto">
-                                    <button class="px-4 py-2 bg-surface-bright border-2 border-on-background shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-label-md text-xs uppercase font-bold hover:bg-secondary-container hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
+                                    <button @onclick="() => RenovarLivroAsync(loan)" class="px-4 py-2 bg-surface-bright border-2 border-on-background shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] font-label-md text-xs uppercase font-bold hover:bg-secondary-container hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all">
                                         Renovar
                                     </button>
                                     
@@ -142,12 +147,31 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await AuthService.InitializeAsync();
+        if (AuthService.CurrentUserId == null)
+        {
+            NavManager.NavigateTo("/login");
+            return;
+        }
+        LoanHandler.OnLoansChanged += AtualizarEmprestimos;
         await CarregarEmprestimosAsync();
+    }
+
+    private async void AtualizarEmprestimos()
+    {
+        await CarregarEmprestimosAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LoanHandler.OnLoansChanged -= AtualizarEmprestimos;
     }
 
     private async Task CarregarEmprestimosAsync()
     {
-        int userId = 3; // Alice Vance - Simulando usuário logado
+        if (AuthService.CurrentUserId == null) return;
+        int userId = AuthService.CurrentUserId.Value;
         var loans = await LoanHandler.GetUserLoansAsync(userId);
         
         MyActiveLoans.Clear();
@@ -194,18 +218,37 @@
         if (title.Contains("dune")) return "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400";
         if (title.Contains("foundation")) return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400";
         if (title.Contains("casmurro")) return "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?w=400"; 
+        if (title.Contains("vidas secas")) return "https://images.unsplash.com/photo-1504439904031-93ded9f93e4e?w=400"; 
+        if (title.Contains("senhor dos anéis")) return "https://images.unsplash.com/photo-1519074069444-1ba4fff66d16?w=400";
+        if (title.Contains("1984")) return "https://images.unsplash.com/photo-1501139083538-0139583c060f?w=400";
+        if (title.Contains("fahrenheit")) return "https://images.unsplash.com/photo-1497215848520-2ce09503460e?w=400";
+        if (title.Contains("vento")) return "https://images.unsplash.com/photo-1473654729523-203e25dfda10?w=400";
         return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=400"; // Imagem genérica
     }
 
     private async Task DevolverLivroAsync(Loan loan)
     {
-        var success = await LoanHandler.ReturnLoanAsync(loan.Id);
-        if (success)
+        var result = await LoanHandler.ReturnLoanAsync(loan.Id);
+        if (result)
         {
-            MyActiveLoans.Remove(loan);
-            loan.ReturnedDate = DateTime.Now;
-            loan.IsOverdue = false;
-            PastLoans.Insert(0, loan);
+            SnackbarService.Show("Livro devolvido com sucesso!");
+        }
+        else
+        {
+            SnackbarService.Show("Erro ao devolver livro.", true);
+        }
+    }
+
+    private async Task RenovarLivroAsync(Loan loan)
+    {
+        var result = await LoanHandler.RenewLoanAsync(loan.Id);
+        if (result)
+        {
+            SnackbarService.Show("Livro renovado com sucesso!");
+        }
+        else
+        {
+            SnackbarService.Show("Erro ao renovar livro.", true);
         }
     }
 

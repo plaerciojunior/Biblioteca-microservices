@@ -1,6 +1,10 @@
 @using BibliotecaMicroservice.Models
 @inject BibliotecaMicroservice.Handlers.LoanHandler LoanHandler
 @inject BibliotecaMicroservice.Handlers.BookHandler BookHandler
+@inject BibliotecaMicroservice.Services.AuthService AuthService
+@inject BibliotecaMicroservice.Services.SnackbarService SnackbarService
+
+@implements IDisposable
 
 <aside class="hidden xl:block w-[320px] shrink-0 h-fit border-2 border-on-background bg-surface-container-lowest neo-shadow p-6 sticky top-[120px]">
     <h3 class="font-headline-md text-headline-md border-b-2 border-on-background pb-2 mb-4">Empréstimos Rápidos</h3>
@@ -44,12 +48,26 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await AuthService.InitializeAsync();
+        LoanHandler.OnLoansChanged += AtualizarEmprestimos;
         await CarregarEmprestimos();
+    }
+
+    private async void AtualizarEmprestimos()
+    {
+        await CarregarEmprestimos();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LoanHandler.OnLoansChanged -= AtualizarEmprestimos;
     }
 
     private async Task CarregarEmprestimos()
     {
-        var loans = await LoanHandler.GetUserLoansAsync(3); // Mock Alice
+        if (AuthService.CurrentUserId == null) return;
+        var loans = await LoanHandler.GetUserLoansAsync(AuthService.CurrentUserId.Value);
         if (loans != null)
         {
             ActiveLoans.Clear();
@@ -72,10 +90,14 @@
 
     private async Task DevolverLivro(int loanId)
     {
-        var success = await LoanHandler.ReturnLoanAsync(loanId);
-        if (success)
+        var result = await LoanHandler.ReturnLoanAsync(loanId);
+        if (result)
         {
-            await CarregarEmprestimos();
+            SnackbarService.Show("Livro devolvido com sucesso!");
+        }
+        else
+        {
+            SnackbarService.Show("Erro ao devolver livro.", true);
         }
     }
 }
