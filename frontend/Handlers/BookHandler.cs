@@ -63,6 +63,30 @@ namespace BibliotecaMicroservice.Handlers
             var response = await _httpClient.PostAsync($"http://localhost:5000/books/{id}/pdf", content);
             return response.IsSuccessStatusCode;
         }
+
+        public async Task<List<BookDto>?> GetUserRecommendationsAsync(int userId)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<BookDto>>($"http://localhost:5000/recommendations/user/{userId}");
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<List<BookDto>?> GetTrendingAsync()
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<List<BookDto>>("http://localhost:5000/recommendations/trending");
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 
     public class BookDto

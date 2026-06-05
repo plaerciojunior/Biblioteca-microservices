@@ -189,10 +189,11 @@
     private string selectedTag = "TUDO";
     private List<string> Tags = new() { "LITERATURA", "SCI-FI", "FANTASIA" };
 
+    private List<Book> AllBooks = new();
     private List<Book> MyTrendsBooks = new();
     private List<Book> GlobalTrendsBooks = new();
 
-    private IEnumerable<Book> FilteredBooks => GlobalTrendsBooks.Where(b => 
+    private IEnumerable<Book> FilteredBooks => AllBooks.Where(b => 
         (string.IsNullOrWhiteSpace(SearchService.SearchTerm) || 
          (b.Title?.Contains(SearchService.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false) || 
          (b.Author?.Contains(SearchService.SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
@@ -226,11 +227,42 @@
         var apiBooks = await BookHandler.GetBooksAsync();
         if (apiBooks != null)
         {
+            AllBooks.Clear();
+            foreach (var b in apiBooks)
+            {
+                AllBooks.Add(new Book
+                {
+                    Id = b.id,
+                    Title = b.nome,
+                    Author = b.autor,
+                    Category = b.categoria,
+                    CoverUrl = ObterCapaPorTitulo(b.nome)
+                });
+            }
+        }
+
+        var myTrends = await BookHandler.GetUserRecommendationsAsync(AuthService.CurrentUserId!.Value);
+        if (myTrends != null)
+        {
+            MyTrendsBooks.Clear();
+            foreach (var b in myTrends)
+            {
+                MyTrendsBooks.Add(new Book
+                {
+                    Id = b.id,
+                    Title = b.nome,
+                    Author = b.autor,
+                    Category = b.categoria,
+                    CoverUrl = ObterCapaPorTitulo(b.nome)
+                });
+            }
+        }
+
+        var globalTrends = await BookHandler.GetTrendingAsync();
+        if (globalTrends != null)
+        {
             GlobalTrendsBooks.Clear();
-            // Ordena a lista para que qualquer livro com "casmurro" no título venha primeiro
-            var sortedBooks = apiBooks.OrderByDescending(b => b.nome.ToLower().Contains("casmurro")).ToList();
-            
-            foreach (var b in sortedBooks)
+            foreach (var b in globalTrends)
             {
                 GlobalTrendsBooks.Add(new Book
                 {
@@ -241,9 +273,6 @@
                     CoverUrl = ObterCapaPorTitulo(b.nome)
                 });
             }
-            
-            // Minhas Tendências exibe apenas 3 livros selecionados
-            MyTrendsBooks = GlobalTrendsBooks.Take(3).ToList();
         }
     }
 
